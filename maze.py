@@ -20,14 +20,18 @@ class DisjointSet:
 
 class Maze:
     def __init__(self, width, height, grid=None):
-        self.width = width
-        self.height = height
-        self.grid_w = 2 * width + 1
-        self.grid_h = 2 * height + 1
         if grid is None:
+            self.width = width
+            self.height = height
+            self.grid_w = 2 * width + 1
+            self.grid_h = 2 * height + 1
             self.grid = [[1 for _ in range(self.grid_w)] for _ in range(self.grid_h)]
             self.walls = self._generate_edges()
         else:
+            self.grid_w = width
+            self.grid_h = height
+            self.width = (width-1) // 2
+            self.height = (height-1) // 2
             self.grid = grid
 
     def _generate_edges(self):
