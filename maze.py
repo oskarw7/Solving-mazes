@@ -89,6 +89,7 @@ class Maze:
         ax.imshow(self.grid, cmap='Greys')
         ax.set_title("Labirynt z obramowaniem i jednym wejściem/wyjściem")
         ax.axis('off')
+        # plt.savefig("maze.png", dpi=300)
         plt.show()
 
     def drawWithPath(self, path: Optional[List[Tuple[int, int]]], method: str) -> None:
@@ -108,7 +109,9 @@ class Maze:
         ax.imshow(gridWithPath, cmap=colorMap, norm=boundaryNorm)
         ax.set_title(f"Ścieżka utworzona przez {method}")
         ax.axis('off')
+        # plt.savefig(f"{method}_path.png", dpi=300)
         plt.show()
+
 
 
     def saveMatrix(self, filename: str) -> None:
