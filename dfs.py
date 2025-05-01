@@ -50,6 +50,6 @@ def dfsIterative(matrix: List[List[int]], entry: Tuple[int, int], exit: Tuple[in
         if (x, y) == exit:
             return currentPath, time.time() - startTime, nodesVisited
         for directionX, directionY in directions:
-            stack.append((x + directionX, y + directionY, currentPath))
+            stack.append((x+directionX, y+directionY, currentPath))
 
-    return None, time.time() - startTime, nodesVisited
+    return None, time.time()-startTime, nodesVisited
