@@ -1,5 +1,7 @@
 import random
+from typing import List, Tuple, Optional
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap, BoundaryNorm
 import pickle
 
 class DisjointSet:
@@ -82,18 +84,38 @@ class Maze:
         self.grid[1][0] = 0
         self.grid[self.grid_h - 2][self.grid_w - 1] = 0
 
-    def draw(self):
+    def draw(self) -> None:
         fig, ax = plt.subplots(figsize=(10, 10))
         ax.imshow(self.grid, cmap='Greys')
         ax.set_title("Labirynt z obramowaniem i jednym wejściem/wyjściem")
         ax.axis('off')
         plt.show()
 
+    def drawWithPath(self, path: Optional[List[Tuple[int, int]]], method: str) -> None:
+        if path is None:
+            self.draw()
+            return
+        gridWithPath = [row[:] for row in self.grid]
+        for x, y in path:
+            if gridWithPath[y][x] == 0:
+                gridWithPath[y][x] = 2
+
+        # 0 - white (not visited), 1 - black (wall), 2 - magenta (visited)
+        colorMap = ListedColormap(['white', 'black', 'magenta'])
+        bounds = [0, 0.5, 1.5, 2.5]
+        boundaryNorm = BoundaryNorm(bounds, colorMap.N)
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.imshow(gridWithPath, cmap=colorMap, norm=boundaryNorm)
+        ax.set_title(f"Ścieżka utworzona przez {method}")
+        ax.axis('off')
+        plt.show()
+
+
     def saveMatrix(self, filename: str) -> None:
         with open(filename, 'wb') as file:
             pickle.dump(self.grid, file)
 
 
-def loadMatrix(filename: str) -> list[list[int]]:
+def loadMatrix(filename: str) -> List[List[int]]:
     with open(filename, 'rb') as file:
         return pickle.load(file)
