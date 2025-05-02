@@ -96,6 +96,7 @@ class Maze:
         if path is None:
             self.draw()
             return
+
         gridWithPath = [row[:] for row in self.grid]
         for x, y in path:
             if gridWithPath[y][x] == 0:

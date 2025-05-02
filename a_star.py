@@ -30,7 +30,7 @@ def aStar(matrix: List[List[int]], entry: Tuple[int, int], exit: Tuple[int, int]
             return path, time.time()-startTime, nodesVisited
         for directionX, directionY in directions:
             x, y = position[0]+directionX, position[1]+directionY
-            if matrix[y][x] == 1 or x < 0 or x >= width or y < 0 or y >= height:
+            if matrix[y][x] == 1 or 0 > x >= width or 0 > y >= height:
                 continue
             adjacentPos = (x, y)
             if adjacentPos not in gScores or gScore+1 < gScores[adjacentPos]:

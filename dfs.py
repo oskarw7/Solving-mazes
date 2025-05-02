@@ -42,7 +42,7 @@ def dfsIterative(matrix: List[List[int]], entry: Tuple[int, int], exit: Tuple[in
     stack = [(entry[0], entry[1], [])]
     while stack:
         x, y, path = stack.pop()
-        if matrix[y][x] == 1 or isVisited[y][x] or x < 0 or x >= width or y < 0 or y >= height:
+        if matrix[y][x] == 1 or isVisited[y][x] or 0 > x >= width or 0 > y >= height:
             continue
         isVisited[y][x] = True
         nodesVisited += 1

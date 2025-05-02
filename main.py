@@ -1,6 +1,7 @@
 from maze import *
 from dfs import *
 from a_star import *
+from qlearning import *
 
 def dfsOnlyBenchmark():
     for i in range(1000):
@@ -39,8 +40,8 @@ def aStarOnlyBenchmark():
             print("Path wasn't found")
 
 def main():
-    aStarOnlyBenchmark()
-    maze = Maze(500, 500)
+    # aStarOnlyBenchmark()
+    maze = Maze(100, 100)
     maze.generate()
     maze.draw()
 
@@ -61,6 +62,16 @@ def main():
     if path is not None:
         maze.drawWithPath(path, "A*")
         print("A* BENCHMARK:")
+        print(f"\tPath length: {len(path)}")
+        print(f"\tExecution time: {executionTime}")
+        print(f"\tTotal number of nodes visited: {nodesVisited}")
+    else:
+        print("Path wasn't found")
+
+    path, executionTime, nodesVisited = qlearning(maze.grid, start, goal)
+    if path is not None:
+        maze.drawWithPath(path, "qlearning")
+        print("QLEARNING BENCHMARK:")
         print(f"\tPath length: {len(path)}")
         print(f"\tExecution time: {executionTime}")
         print(f"\tTotal number of nodes visited: {nodesVisited}")
