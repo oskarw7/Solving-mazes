@@ -1,101 +1,120 @@
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Any
 import time
 import random
 import numpy as np
-from a_star import h  # assuming you have a heuristic function
-
 import pickle
 
-def qlearning(matrix: List[List[int]], entry: Tuple[int, int], exit: Tuple[int, int]) -> Tuple[Optional[List[Tuple[int, int]]], float, int]:
-    startTime = time.time()
+class Model:
+    def __init__(self, matrix, entry, goal):
+        self.matrix = matrix
+        self.entry = entry
+        self.goal = goal
 
-    width = len(matrix[0])
-    height = len(matrix)
+        self.width = len(matrix[0])
+        self.height = len(matrix)
 
-    qtable = [[[0.0 for _ in range(4)] for _ in range(width)] for _ in range(height)]
-    directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+        self.qtable = [[[0.0 for _ in range(4)] for _ in range(self.width)] for _ in range(self.height)]
+        self.directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
-    nodesVisited = 0
+        self.learning_rate = 0.1
+        self.discount_factor = 0.99
 
-    learning_rate = 0.1
-    discount_factor = 0.99
-    episodes = 5000
-    reward = 1000
-    max_steps = width * height * 2
+        self.epsilon_decay = 0.998
 
-    for ep in range(episodes):
-        position = entry
+    def learn(self, episodes : int) -> tuple[float, int | Any]:
+
+        startTime = time.time()
+
+        nodesVisited = 0
+        epsilon = 1
+        max_steps = self.width * self.height * 2
+        reward = self.width * 100
+
+
+        for ep in range(episodes):
+            position = self.entry
+            steps = 0
+            epsilon = max(0.01, epsilon * self.epsilon_decay)
+
+            while position != self.goal:
+                x, y = position
+                nodesVisited += 1
+                steps += 1
+
+                if steps > max_steps:
+                    print(f"Episode {ep + 1}: Max steps reached")
+                    break
+
+                if random.random() < epsilon:
+                    move_idx = random.randint(0, 3)
+                else:
+                    qvals = self.qtable[y][x]
+                    max_q = max(qvals)
+                    best_moves = [i for i, val in enumerate(qvals) if val == max_q]
+                    move_idx = random.choice(best_moves)
+
+                d_x, d_y = self.directions[move_idx]
+                next_x = x + d_x
+                next_y = y + d_y
+
+                old_dist = abs(self.goal[0] - x) + abs(self.goal[1] - y)
+                new_dist = abs(self.goal[0] - next_x) + abs(self.goal[1] - next_y)
+
+                if not (0 <= next_x < self.width and 0 <= next_y < self.height):
+                    r = -10
+                    next_x, next_y = x, y
+                elif self.matrix[next_y][next_x] == 1:
+                    r = -10
+                    next_x, next_y = x, y
+                elif (next_x, next_y) == self.goal:
+                    r = reward
+                else:
+                    r = -1 + (old_dist - new_dist)
+
+                next_max = max(self.qtable[next_y][next_x])
+                prev_value = self.qtable[y][x][move_idx]
+                self.qtable[y][x][move_idx] += self.learning_rate * (r + self.discount_factor * next_max - prev_value)
+
+                position = (next_x, next_y)
+
+            if not (ep + 1) % (episodes // 10):
+                print(f"Episode {ep + 1}/{episodes} completed")
+
+        return time.time() - startTime, nodesVisited
+
+
+    def run(self):
+        startTime = time.time()
+        position = self.entry
+        path = [self.entry]
         steps = 0
-        epsilon = max(0.01, 1.0 - ep / episodes)
+        max_steps = self.width * self.height * 2
 
-        while position != exit:
+        while position != self.goal and steps < max_steps:
             x, y = position
-            nodesVisited += 1
             steps += 1
 
-            if steps > max_steps:
-                # print(f"Episode {ep + 1}: Max steps reached")
+            move_idx = int(np.argmax(self.qtable[y][x]))
+            d_x, d_y = self.directions[move_idx]
+            next_x, next_y = x + d_x, y + d_y
+
+            if not (0 <= next_x < self.width and 0 <= next_y < self.height):
+                break
+            if self.matrix[next_y][next_x] != 0:
                 break
 
-            if random.random() < epsilon:
-                move_idx = random.randint(0, 3)
-            else:
-                qvals = qtable[y][x]
-                max_q = max(qvals)
-                best_moves = [i for i, val in enumerate(qvals) if val == max_q]
-                move_idx = random.choice(best_moves)
-
-            d_x, d_y = directions[move_idx]
-            next_x = x + d_x
-            next_y = y + d_y
-
-            old_dist = abs(exit[0] - x) + abs(exit[1] - y)
-            new_dist = abs(exit[0] - next_x) + abs(exit[1] - next_y)
-
-            if not (0 <= next_x < width and 0 <= next_y < height):
-                r = -10
-                next_x, next_y = x, y
-            elif matrix[next_y][next_x] == 1:
-                r = -10
-                next_x, next_y = x, y
-            elif (next_x, next_y) == exit:
-                r = reward
-            else:
-                r = -1 + (old_dist - new_dist)
-
-            next_max = max(qtable[next_y][next_x])
-            prev_value = qtable[y][x][move_idx]
-            qtable[y][x][move_idx] += learning_rate * (r + discount_factor * next_max - prev_value)
-
             position = (next_x, next_y)
+            path.append(position)
 
-        # print(f"Episode {ep + 1}/{episodes} completed")
+        if position != self.goal:
+            return None, time.time() - startTime, steps, self.qtable
 
-    with open("qlearned.pkl", 'wb') as file:
-        pickle.dump(qtable, file)
+        return path, time.time() - startTime, steps, self.qtable
 
-    # extract path from trained Q-table
-    position = entry
-    path = [entry]
-    steps = 0
+    def serialize(self, filename):
+        with open(filename, "wb") as f:
+            pickle.dump(self.qtable, f)
 
-    while position != exit and steps < max_steps:
-        x, y = position
-        steps += 1
-
-        move_idx = int(np.argmax(qtable[y][x]))
-        d_x, d_y = directions[move_idx]
-        next_x, next_y = x + d_x, y + d_y
-
-        if not (0 <= next_x < width and 0 <= next_y < height):
-            break
-        if matrix[next_y][next_x] != 0:
-            break
-
-        position = (next_x, next_y)
-        path.append(position)
-
-    if position != exit:
-        return None, time.time() - startTime, nodesVisited
-
-    return path, time.time() - startTime, nodesVisited
+    def unserialize(self, filename):
+        with open(filename, "rb") as f:
+            self.qtable = pickle.load(f)
