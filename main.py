@@ -41,15 +41,15 @@ def aStarOnlyBenchmark():
             print("Path wasn't found")
 
 def main():
-    w = 200
-    h = 200
-    maze = Maze(w, h)
-    maze.generate()
-    maze.draw()
-
+    w = 111
+    h = 111
     folder_name = f"{w}x{h}"
-    os.makedirs(folder_name, exist_ok=True)
-    maze.saveMatrix(f"{folder_name}/matrix.pkl")
+    maze = Maze(w, h)
+    if os.path.isdir(folder_name):
+        maze.grid = loadMatrix(f"{folder_name}/matrix.pkl")
+    else:
+        maze.generate()
+    maze.draw()
 
     start = (0, 1)
     goal = (maze.grid_w-1, maze.grid_h-2)
@@ -74,13 +74,16 @@ def main():
     else:
         print("Path wasn't found")
 
-    qmodel = Model(maze.grid, start, goal)
-    executionTime, nodesVisited = qmodel.learn(5000)
-    print("QLEARNING TRAINING:")
-    print(f"\tExecution time: {executionTime}")
-    print(f"\tTotal number of nodes visited: {nodesVisited}")
+    qmodel = Model(maze.grid, start, goal, 5000)
 
-    qmodel.serialize(f"{folder_name}/model.pkl")
+    if not os.path.isdir(folder_name):
+        executionTime, nodesVisited = qmodel.learn()
+        print("QLEARNING TRAINING:")
+        print(f"\tExecution time: {executionTime}")
+        print(f"\tTotal number of nodes visited: {nodesVisited}")
+    else:
+        print("QLEARNING LOADED MODEL FROM FILE")
+        qmodel.unserialize(f"{folder_name}/model.pkl")
 
     path, executionTime, nodesVisited, model = qmodel.run()
 
@@ -92,6 +95,10 @@ def main():
         print(f"\tTotal number of nodes visited: {nodesVisited}")
     else:
         print("Path wasn't found")
+
+    os.makedirs(folder_name, exist_ok=True)
+    maze.saveMatrix(f"{folder_name}/matrix.pkl")
+    qmodel.serialize(f"{folder_name}/model.pkl")
 
     print(f"saved maze and model to directory {folder_name}/")
 

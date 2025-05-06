@@ -5,7 +5,7 @@ import numpy as np
 import pickle
 
 class Model:
-    def __init__(self, matrix, entry, goal):
+    def __init__(self, matrix, entry, goal, episodes):
         self.matrix = matrix
         self.entry = entry
         self.goal = goal
@@ -16,25 +16,32 @@ class Model:
         self.qtable = [[[0.0 for _ in range(4)] for _ in range(self.width)] for _ in range(self.height)]
         self.directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
-        self.learning_rate = 0.1
-        self.discount_factor = 0.99
+        self.alpha_zero = 0.5
+        self.alpha_decay = 0.001
 
-        self.epsilon_decay = 0.998
+        self.discount_factor = 0.999 # jest ok
 
-    def learn(self, episodes : int) -> tuple[float, int | Any]:
+        self.episodes = episodes
+
+        self.epsilon_min = 0.01
+        self.epsilon_decay = self.epsilon_min ** (1 / self.episodes)
+
+
+    def learn(self) -> tuple[float, int | Any]:
 
         startTime = time.time()
 
         nodesVisited = 0
         epsilon = 1
-        max_steps = self.width * self.height * 2
-        reward = self.width * 100
+        max_steps = self.width * self.height
+        reward = self.width * 10
 
 
-        for ep in range(episodes):
+        for ep in range(self.episodes):
             position = self.entry
             steps = 0
-            epsilon = max(0.01, epsilon * self.epsilon_decay)
+            epsilon = max(self.epsilon_min, epsilon * self.epsilon_decay)
+            alpha = self.alpha_zero / (1 + ep * self.alpha_decay)
 
             while position != self.goal:
                 x, y = position
@@ -73,12 +80,12 @@ class Model:
 
                 next_max = max(self.qtable[next_y][next_x])
                 prev_value = self.qtable[y][x][move_idx]
-                self.qtable[y][x][move_idx] += self.learning_rate * (r + self.discount_factor * next_max - prev_value)
+                self.qtable[y][x][move_idx] += alpha * (r + self.discount_factor * next_max - prev_value)
 
                 position = (next_x, next_y)
 
-            if not (ep + 1) % (episodes // 10):
-                print(f"Episode {ep + 1}/{episodes} completed")
+            if not (ep + 1) % (self.episodes // 10):
+                print(f"Episode {ep + 1}/{self.episodes} completed")
 
         return time.time() - startTime, nodesVisited
 
