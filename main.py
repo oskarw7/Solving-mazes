@@ -41,8 +41,8 @@ def aStarOnlyBenchmark():
             print("Path wasn't found")
 
 def main():
-    w = 111
-    h = 111
+    w = 555
+    h = 555
     folder_name = f"{w}x{h}"
     maze = Maze(w, h)
     if os.path.isdir(folder_name):

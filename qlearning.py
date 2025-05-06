@@ -3,6 +3,8 @@ import time
 import random
 import numpy as np
 import pickle
+from math import sqrt
+from a_star import h
 
 class Model:
     def __init__(self, matrix, entry, goal, episodes):
@@ -18,12 +20,13 @@ class Model:
 
         self.alpha_zero = 0.5
         self.alpha_decay = 0.001
+        self.alpha_min = 0.01
 
-        self.discount_factor = 0.999 # jest ok
+        self.discount_factor = 0.99
 
         self.episodes = episodes
 
-        self.epsilon_min = 0.01
+        self.epsilon_min = 0.1
         self.epsilon_decay = self.epsilon_min ** (1 / self.episodes)
 
 
@@ -34,14 +37,14 @@ class Model:
         nodesVisited = 0
         epsilon = 1
         max_steps = self.width * self.height
-        reward = self.width * 10
+        reward = h((0,1), (self.goal[0], self.goal[1]))
 
 
         for ep in range(self.episodes):
             position = self.entry
             steps = 0
             epsilon = max(self.epsilon_min, epsilon * self.epsilon_decay)
-            alpha = self.alpha_zero / (1 + ep * self.alpha_decay)
+            alpha = max(self.alpha_min, self.alpha_zero / (1 + ep * self.alpha_decay))
 
             while position != self.goal:
                 x, y = position
@@ -64,19 +67,19 @@ class Model:
                 next_x = x + d_x
                 next_y = y + d_y
 
-                old_dist = abs(self.goal[0] - x) + abs(self.goal[1] - y)
-                new_dist = abs(self.goal[0] - next_x) + abs(self.goal[1] - next_y)
+                old_dist = h((self.goal[0],self.goal[1]),(x,y))
+                new_dist = h((self.goal[0],self.goal[1]),(next_x,next_y))
 
                 if not (0 <= next_x < self.width and 0 <= next_y < self.height):
-                    r = -10
+                    r = 0
                     next_x, next_y = x, y
                 elif self.matrix[next_y][next_x] == 1:
-                    r = -10
+                    r = 0
                     next_x, next_y = x, y
                 elif (next_x, next_y) == self.goal:
                     r = reward
                 else:
-                    r = -1 + (old_dist - new_dist)
+                    r = (old_dist - new_dist)
 
                 next_max = max(self.qtable[next_y][next_x])
                 prev_value = self.qtable[y][x][move_idx]
