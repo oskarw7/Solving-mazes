@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, BoundaryNorm
 import pickle
 
+
 class DisjointSet:
     def __init__(self, width, height):
         self.parent = {(x, y): (x, y) for y in range(height) for x in range(width)}
@@ -20,6 +21,7 @@ class DisjointSet:
             return True
         return False
 
+
 class Maze:
     def __init__(self, width, height, grid=None):
         if grid is None:
@@ -32,8 +34,8 @@ class Maze:
         else:
             self.grid_w = width
             self.grid_h = height
-            self.width = (width-1) // 2
-            self.height = (height-1) // 2
+            self.width = (width - 1) // 2
+            self.height = (height - 1) // 2
             self.grid = grid
 
     def _generate_edges(self):
@@ -66,13 +68,17 @@ class Maze:
                             if 0 <= gx1 + offset < self.grid_w:
                                 self.grid[gy1][gx1 + offset] = 0
                                 self.grid[gy2][gx2 + offset] = 0
-                                self.grid[(gy1 + gy2) // 2][(gx1 + gx2) // 2 + offset] = 0
+                                self.grid[(gy1 + gy2) // 2][
+                                    (gx1 + gx2) // 2 + offset
+                                ] = 0
                     elif dy == 0:
                         for offset in [-1, 1]:
                             if 0 <= gy1 + offset < self.grid_h:
                                 self.grid[gy1 + offset][gx1] = 0
                                 self.grid[gy2 + offset][gx2] = 0
-                                self.grid[(gy1 + gy2) // 2 + offset][(gx1 + gx2) // 2] = 0
+                                self.grid[(gy1 + gy2) // 2 + offset][
+                                    (gx1 + gx2) // 2
+                                ] = 0
 
         for x in range(self.grid_w):
             self.grid[0][x] = 1
@@ -86,9 +92,9 @@ class Maze:
 
     def draw(self) -> None:
         fig, ax = plt.subplots(figsize=(10, 10))
-        ax.imshow(self.grid, cmap='Greys')
+        ax.imshow(self.grid, cmap="Greys")
         ax.set_title("Labirynt z obramowaniem i jednym wejściem/wyjściem")
-        ax.axis('off')
+        ax.axis("off")
         # plt.savefig("maze.png", dpi=300)
         plt.show()
 
@@ -103,23 +109,21 @@ class Maze:
                 gridWithPath[y][x] = 2
 
         # 0 - white (not visited), 1 - black (wall), 2 - magenta (visited)
-        colorMap = ListedColormap(['white', 'black', 'magenta'])
+        colorMap = ListedColormap(["white", "black", "magenta"])
         bounds = [0, 0.5, 1.5, 2.5]
         boundaryNorm = BoundaryNorm(bounds, colorMap.N)
         fig, ax = plt.subplots(figsize=(10, 10))
         ax.imshow(gridWithPath, cmap=colorMap, norm=boundaryNorm)
         ax.set_title(f"Ścieżka utworzona przez {method}")
-        ax.axis('off')
+        ax.axis("off")
         # plt.savefig(f"{method}_path.png", dpi=300)
         plt.show()
 
-
-
     def saveMatrix(self, filename: str) -> None:
-        with open(filename, 'wb') as file:
+        with open(filename, "wb") as file:
             pickle.dump(self.grid, file)
 
 
 def loadMatrix(filename: str) -> List[List[int]]:
-    with open(filename, 'rb') as file:
+    with open(filename, "rb") as file:
         return pickle.load(file)
