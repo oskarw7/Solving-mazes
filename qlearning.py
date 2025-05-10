@@ -1,44 +1,66 @@
-from typing import List, Tuple, Optional, Any
+from typing import List, Tuple, Optional
 import time
 import random
 import numpy as np
 import pickle
-from math import sqrt
 from a_star import h
 
+
 class Model:
-    def __init__(self, matrix, entry, goal, episodes):
+    def __init__(
+        self,
+        matrix: List[List[int]],
+        entry: Tuple[int, int],
+        goal: Tuple[int, int],
+        episodes: int,
+        expected_plen: int,
+    ):
         self.matrix = matrix
         self.entry = entry
         self.goal = goal
+        self.reward = expected_plen
 
         self.width = len(matrix[0])
         self.height = len(matrix)
 
-        self.qtable = [[[0.0 for _ in range(4)] for _ in range(self.width)] for _ in range(self.height)]
+        self.qtable = [
+            [[0.0 for _ in range(4)] for _ in range(self.width)]
+            for _ in range(self.height)
+        ]
+
         self.directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
-        self.alpha_zero = 0.5
-        self.alpha_decay = 0.001
-        self.alpha_min = 0.01
-
-        self.discount_factor = 0.99
+        self.valid_actions = [
+            [[] for _ in range(self.width)] for _ in range(self.height)
+        ]
+        for y in range(self.height):
+            for x in range(self.width):
+                for i, (d_x, d_y) in enumerate(self.directions):
+                    nx, ny = x + d_x, y + d_y
+                    if (
+                        0 <= nx < self.width
+                        and 0 <= ny < self.height
+                        and self.matrix[ny][nx] != 1
+                    ):
+                        self.valid_actions[y][x].append(i)
 
         self.episodes = episodes
+
+        self.alpha_zero = 0.5
+        self.alpha_min = 0.01
+        self.alpha_decay = 0.001
+
+        self.discount_factor = 0.99
 
         self.epsilon_min = 0.1
         self.epsilon_decay = self.epsilon_min ** (1 / self.episodes)
 
-
-    def learn(self) -> tuple[float, int | Any]:
-
+    def learn(self) -> tuple[float, int]:
         startTime = time.time()
 
         nodesVisited = 0
         epsilon = 1
         max_steps = self.width * self.height
-        reward = h((0,1), (self.goal[0], self.goal[1]))
-
 
         for ep in range(self.episodes):
             position = self.entry
@@ -50,55 +72,53 @@ class Model:
                 x, y = position
                 nodesVisited += 1
                 steps += 1
+                valid_moves = self.valid_actions[y][x]
 
-                if steps > max_steps:
-                    print(f"Episode {ep + 1}: Max steps reached")
+                if steps > max_steps or not valid_moves:
                     break
 
                 if random.random() < epsilon:
-                    move_idx = random.randint(0, 3)
+                    move_idx = random.choice(valid_moves)
                 else:
-                    qvals = self.qtable[y][x]
+                    qvals = [self.qtable[y][x][i] for i in valid_moves]
                     max_q = max(qvals)
-                    best_moves = [i for i, val in enumerate(qvals) if val == max_q]
+                    best_moves = [
+                        valid_moves[i] for i, val in enumerate(qvals) if val == max_q
+                    ]
                     move_idx = random.choice(best_moves)
 
                 d_x, d_y = self.directions[move_idx]
-                next_x = x + d_x
-                next_y = y + d_y
+                next_x, next_y = x + d_x, y + d_y
 
-                old_dist = h((self.goal[0],self.goal[1]),(x,y))
-                new_dist = h((self.goal[0],self.goal[1]),(next_x,next_y))
+                old_dist = h((self.goal[0], self.goal[1]), (x, y))
+                new_dist = h((self.goal[0], self.goal[1]), (next_x, next_y))
 
-                if not (0 <= next_x < self.width and 0 <= next_y < self.height):
-                    r = 0
-                    next_x, next_y = x, y
-                elif self.matrix[next_y][next_x] == 1:
-                    r = 0
-                    next_x, next_y = x, y
-                elif (next_x, next_y) == self.goal:
-                    r = reward
+                if (next_x, next_y) == self.goal:
+                    r = self.reward
                 else:
-                    r = (old_dist - new_dist)
+                    r = old_dist - new_dist
 
                 next_max = max(self.qtable[next_y][next_x])
                 prev_value = self.qtable[y][x][move_idx]
-                self.qtable[y][x][move_idx] += alpha * (r + self.discount_factor * next_max - prev_value)
+                self.qtable[y][x][move_idx] += alpha * (
+                    r + self.discount_factor * next_max - prev_value
+                )
 
                 position = (next_x, next_y)
 
             if not (ep + 1) % (self.episodes // 10):
-                print(f"Episode {ep + 1}/{self.episodes} completed")
+                print(f"Training {(10 * (ep + 1) / (self.episodes // 10)):.2f}% done")
 
         return time.time() - startTime, nodesVisited
 
-
-    def run(self):
+    def run(
+        self,
+    ) -> Tuple[Optional[List[Tuple[int, int]]], float, int]:
         startTime = time.time()
         position = self.entry
         path = [self.entry]
         steps = 0
-        max_steps = self.width * self.height * 2
+        max_steps = self.reward * 1.5
 
         while position != self.goal and steps < max_steps:
             x, y = position
@@ -117,14 +137,14 @@ class Model:
             path.append(position)
 
         if position != self.goal:
-            return None, time.time() - startTime, steps, self.qtable
+            return None, time.time() - startTime, steps
 
-        return path, time.time() - startTime, steps, self.qtable
+        return path, time.time() - startTime, steps
 
-    def serialize(self, filename):
+    def serialize(self, filename: str) -> None:
         with open(filename, "wb") as f:
             pickle.dump(self.qtable, f)
 
-    def unserialize(self, filename):
+    def unserialize(self, filename: str) -> None:
         with open(filename, "rb") as f:
             self.qtable = pickle.load(f)
