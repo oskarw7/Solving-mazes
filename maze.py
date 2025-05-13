@@ -3,6 +3,7 @@ from typing import List, Tuple, Optional
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, BoundaryNorm
 import pickle
+import numpy as np
 
 
 class DisjointSet:
@@ -50,6 +51,29 @@ class Maze:
         return walls
 
     def generate(self):
+        # Create a matrix with weights symbolizing chance
+        # to destroy a wall between two cells
+        # small numbers in the middle, big numbers on the edges
+        # labirynth dense in the middle, sparse on the edges
+
+        weights = np.zeros((self.grid_h, self.grid_w))
+        for y in range(self.grid_h):
+            for x in range(self.grid_w):
+                chance = 1 - (
+                    abs(x - self.grid_w // 2) / (self.grid_w // 2)
+                    + abs(y - self.grid_h // 2) / (self.grid_h // 2)
+                )
+                weights[y][x] = chance
+        weights = np.clip(weights, 0, 1)
+
+        # plot the matrix density to check the distribution
+
+        plt.imshow(weights, cmap="hot", interpolation="nearest")
+        plt.colorbar()
+        plt.title("Matrix density")
+        plt.axis("off")
+        plt.show()
+
         ds = DisjointSet(self.width, self.height)
         for (x1, y1), (x2, y2) in self.walls:
             if ds.union((x1, y1), (x2, y2)):
@@ -136,10 +160,11 @@ class Maze:
 
         fig, ax = plt.subplots(figsize=(10, 10))
         ax.imshow(gridWithPath, cmap=colorMap, norm=boundaryNorm)
-        ax.set_title("Ścieżki utworzone przez DFS (magenta), A* (brown), Q-learning (cyan)")
+        ax.set_title(
+            "Ścieżki utworzone przez DFS (magenta), A* (brown), Q-learning (cyan)"
+        )
         ax.axis("off")
         plt.show()
-
 
     def saveMatrix(self, filename: str) -> None:
         with open(filename, "wb") as file:
