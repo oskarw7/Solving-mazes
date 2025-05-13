@@ -119,6 +119,28 @@ class Maze:
         # plt.savefig(f"{method}_path.png", dpi=300)
         plt.show()
 
+    def drawAll(self, paths: List[List[Tuple[int, int]]]) -> None:
+        gridWithPath = [row[:] for row in self.grid]
+
+        path_color_values = [2, 3, 4]  # 2: magenta, 3: yellow, 4: green
+
+        for path, val in zip(paths, path_color_values):
+            for x, y in path:
+                if gridWithPath[y][x] == 0:
+                    gridWithPath[y][x] = val
+
+        # 0 - white (empty), 1 - black (wall), 2 - magenta (dfs), 3 - brown (astar), 4 - green (qlearning)
+        colorMap = ListedColormap(["white", "black", "magenta", "brown", "cyan"])
+        bounds = [0, 0.5, 1.5, 2.5, 3.5, 4.5]
+        boundaryNorm = BoundaryNorm(bounds, colorMap.N)
+
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.imshow(gridWithPath, cmap=colorMap, norm=boundaryNorm)
+        ax.set_title("Ścieżki utworzone przez DFS (magenta), A* (brown), Q-learning (cyan)")
+        ax.axis("off")
+        plt.show()
+
+
     def saveMatrix(self, filename: str) -> None:
         with open(filename, "wb") as file:
             pickle.dump(self.grid, file)

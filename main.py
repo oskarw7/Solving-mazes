@@ -49,6 +49,7 @@ def main():
     sed = 1
     random.seed(sed)
     np.random.seed(sed)
+    res = []
 
     w = 1000
     h = 1000
@@ -65,8 +66,9 @@ def main():
     goal = (maze.grid_w - 1, maze.grid_h - 2)
 
     path, executionTime, nodesVisited = dfsIterative(maze.grid, start, goal)
+    res.append(path)
     if path is not None:
-        # maze.drawWithPath(path, "DFS")
+        #maze.drawWithPath(path, "DFS")
         print("DFS BENCHMARK:")
         print(f"\tPath length: {len(path)}")
         print(f"\tExecution time: {executionTime}")
@@ -75,8 +77,9 @@ def main():
         print("Path wasn't found")
 
     path, executionTime, nodesVisited = aStar(maze.grid, start, goal)
+    res.append(path)
     if path is not None:
-        # maze.drawWithPath(path, "A*")
+        #maze.drawWithPath(path, "A*")
         print("A* BENCHMARK:")
         print(f"\tPath length: {len(path)}")
         print(f"\tExecution time: {executionTime}")
@@ -96,15 +99,17 @@ def main():
         qmodel.unserialize(f"{folder_name}/model.pkl")
 
     path, executionTime, nodesVisited = qmodel.run()
-
+    res.append(path)
     if path is not None:
-        # maze.drawWithPath(path, "qlearning")
+        #maze.drawWithPath(path, "qlearning")
         print("QLEARNING RESULT:")
         print(f"\tPath length: {len(path)}")
         print(f"\tExecution time: {executionTime}")
         print(f"\tTotal number of nodes visited: {nodesVisited}")
     else:
         print("Path wasn't found")
+
+    maze.drawAll(res)
 
     os.makedirs(folder_name, exist_ok=True)
     maze.saveMatrix(f"{folder_name}/matrix.pkl")
