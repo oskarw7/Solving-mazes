@@ -1,3 +1,4 @@
 matplotlib==3.10.3
 numpy==2.2.5
 debugpy==1.8.14
+ruff

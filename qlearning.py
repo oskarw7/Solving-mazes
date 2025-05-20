@@ -4,6 +4,7 @@ import random
 import numpy as np
 import pickle
 from a_star import h
+# from HH_controller import HyperHeuristicController
 
 
 class Model:
@@ -28,8 +29,9 @@ class Model:
             for _ in range(self.height)
         ]
 
-        self.directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+        # self.controller = HyperHeuristicController(episodes)
 
+        self.directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
         self.valid_actions = [
             [[] for _ in range(self.width)] for _ in range(self.height)
         ]
@@ -66,7 +68,8 @@ class Model:
             position = self.entry
             steps = 0
             epsilon = max(self.epsilon_min, epsilon * self.epsilon_decay)
-            alpha = max(self.alpha_min, self.alpha_zero / (1 + ep * self.alpha_decay))
+            alpha = max(self.alpha_min, self.alpha_zero /
+                        (1 + ep * self.alpha_decay))
 
             while position != self.goal:
                 x, y = position
@@ -107,7 +110,8 @@ class Model:
                 position = (next_x, next_y)
 
             if not (ep + 1) % (self.episodes // 10):
-                print(f"Training {(10 * (ep + 1) / (self.episodes // 10)):.2f}% done")
+                print(f"Training {
+                      (10 * (ep + 1) / (self.episodes // 10)):.2f}% done")
 
         return time.time() - startTime, nodesVisited
 

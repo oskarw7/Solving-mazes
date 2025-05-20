@@ -7,7 +7,8 @@ import pickle
 
 class DisjointSet:
     def __init__(self, width, height):
-        self.parent = {(x, y): (x, y) for y in range(height) for x in range(width)}
+        self.parent = {(x, y): (x, y) for y in range(height)
+                       for x in range(width)}
 
     def find(self, cell):
         if self.parent[cell] != cell:
@@ -29,7 +30,8 @@ class Maze:
             self.height = height
             self.grid_w = 2 * width + 1
             self.grid_h = 2 * height + 1
-            self.grid = [[1 for _ in range(self.grid_w)] for _ in range(self.grid_h)]
+            self.grid = [[1 for _ in range(self.grid_w)]
+                         for _ in range(self.grid_h)]
             self.walls = self._generate_edges()
         else:
             self.grid_w = width
@@ -130,20 +132,39 @@ class Maze:
                     gridWithPath[y][x] = val
 
         # 0 - white (empty), 1 - black (wall), 2 - magenta (dfs), 3 - brown (astar), 4 - green (qlearning)
-        colorMap = ListedColormap(["white", "black", "magenta", "brown", "cyan"])
+        colorMap = ListedColormap(
+            ["white", "black", "magenta", "brown", "cyan"])
         bounds = [0, 0.5, 1.5, 2.5, 3.5, 4.5]
         boundaryNorm = BoundaryNorm(bounds, colorMap.N)
 
         fig, ax = plt.subplots(figsize=(10, 10))
         ax.imshow(gridWithPath, cmap=colorMap, norm=boundaryNorm)
-        ax.set_title("Ścieżki utworzone przez DFS (magenta), A* (brown), Q-learning (cyan)")
+        ax.set_title(
+            "Ścieżki utworzone przez DFS (magenta), A* (brown), Q-learning (cyan)")
         ax.axis("off")
         plt.show()
-
 
     def saveMatrix(self, filename: str) -> None:
         with open(filename, "wb") as file:
             pickle.dump(self.grid, file)
+
+    def toGraph(self) -> Tuple[List[Tuple[int, int]], List[Tuple[int, int]]]:
+        nodes = []
+        edges = []
+
+        for y in range(self.grid_h):
+            for x in range(self.grid_w):
+                if self.grid[y][x] == 1:
+                    continue  # ściana
+                idx = y * self.grid_w + x
+                nodes.append(idx)
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < self.grid_w and 0 <= ny < self.grid_h and self.grid[ny][nx] == 0:
+                        nidx = ny * self.grid_w + nx
+                        edges.append((idx, nidx))
+
+        return nodes, edges
 
 
 def loadMatrix(filename: str) -> List[List[int]]:
