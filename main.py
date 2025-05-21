@@ -15,7 +15,8 @@ def dfsOnlyBenchmark():
 
         entry = (0, 1)
         exit = (maze.grid_w - 1, maze.grid_h - 2)
-        path, executionTime, nodesVisited = dfsIterative(maze.grid, entry, exit)
+        path, executionTime, nodesVisited = dfsIterative(
+            maze.grid, entry, exit)
         if path is not None:
             # maze.drawWithPath(path, "DFS")
             print("DFS BENCHMARK:")
@@ -51,8 +52,8 @@ def main():
     np.random.seed(sed)
     res = []
 
-    w = 300
-    h = 300
+    w = 100
+    h = 100
     folder_name = f"{w}x{h}-s{sed}"
     maze = Maze(w, h)
     if os.path.isdir(folder_name):
@@ -68,7 +69,7 @@ def main():
     path, executionTime, nodesVisited = dfsIterative(maze.grid, start, goal)
     res.append(path)
     if path is not None:
-        #maze.drawWithPath(path, "DFS")
+        # maze.drawWithPath(path, "DFS")
         print("DFS BENCHMARK:")
         print(f"\tPath length: {len(path)}")
         print(f"\tExecution time: {executionTime}")
@@ -79,7 +80,7 @@ def main():
     path, executionTime, nodesVisited = aStar(maze.grid, start, goal)
     res.append(path)
     if path is not None:
-        #maze.drawWithPath(path, "A*")
+        # maze.drawWithPath(path, "A*")
         print("A* BENCHMARK:")
         print(f"\tPath length: {len(path)}")
         print(f"\tExecution time: {executionTime}")
@@ -101,7 +102,7 @@ def main():
     path, executionTime, nodesVisited = qmodel.run()
     res.append(path)
     if path is not None:
-        #maze.drawWithPath(path, "qlearning")
+        # maze.drawWithPath(path, "qlearning")
         print("QLEARNING RESULT:")
         print(f"\tPath length: {len(path)}")
         print(f"\tExecution time: {executionTime}")

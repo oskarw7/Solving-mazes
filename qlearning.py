@@ -4,7 +4,7 @@ import random
 import numpy as np
 import pickle
 from a_star import h
-# from HH_controller import HyperHeuristicController
+from h_learn import HyperHeuristicController
 
 
 class Model:
@@ -24,12 +24,12 @@ class Model:
         self.width = len(matrix[0])
         self.height = len(matrix)
 
+        self.h_controller = HyperHeuristicController(episodes)
+
         self.qtable = [
             [[0.0 for _ in range(4)] for _ in range(self.width)]
             for _ in range(self.height)
         ]
-
-        # self.controller = HyperHeuristicController(episodes)
 
         self.directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
         self.valid_actions = [

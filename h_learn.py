@@ -1,9 +1,9 @@
 import numpy as np
 import pickle
 
-import torch
-import torch.nn.functional as F
-from torch_geometric.nn import GCNConv
+# import torch
+# import torch.nn.functional as F
+# from torch_geometric.nn import GCNConv
 
 
 class HyperHeuristicController:
@@ -23,7 +23,7 @@ class HyperHeuristicController:
                 else:
                     self.stable_counter = 0
             self.last_qtable_snapshot = pickle.loads(
-                pickle.dumps(qtable))  # Deep copy
+                pickle.dumps(qtable))
 
         # wybor strategii
         if episode < self.total_episodes * 0.3:
