@@ -24,7 +24,7 @@ class DisjointSet:
 
 
 class Maze:
-    def __init__(self, width, height, grid=None):
+    def __init__(self, width, height, grid=None, weighed_grid_range=3):
         if grid is None:
             self.width = width
             self.height = height
@@ -33,12 +33,42 @@ class Maze:
             self.grid = [[1 for _ in range(self.grid_w)]
                          for _ in range(self.grid_h)]
             self.walls = self._generate_edges()
+
+            # initialized in __init__
+            self.weighed_grid = self._generate_weighed_grid(weighed_grid_range)
         else:
             self.grid_w = width
             self.grid_h = height
             self.width = (width - 1) // 2
             self.height = (height - 1) // 2
             self.grid = grid
+
+    def _generate_weighed_grid(self, range: int) -> List[List[int]]:
+        """
+        Generates a grid with weights equal number of walls around each
+        non-wall cell (0) in the grid.
+
+        :param range: The range to search for walls around each cell
+            (0 is the cell itself)
+
+        :return: A grid with weights and zeroes for walls
+        """
+        weighed_grid = [[0 for _ in range(self.grid_w)]
+                        for _ in range(self.grid_h)]
+        for y in range(self.grid_h):
+            for x in range(self.grid_w):
+                if self.grid[y][x] == 1:
+                    continue
+                for dy in range(-range, range + 1):
+                    for dx in range(-range, range + 1):
+                        if abs(dy) + abs(dx) > range:
+                            continue
+                        nx, ny = x + dx, y + dy
+                        if 0 <= nx < self.grid_w and 0 <= ny < self.grid_h:
+                            if self.grid[ny][nx] == 1:
+                                weighed_grid[y][x] += 1
+
+        return weighed_grid
 
     def _generate_edges(self):
         walls = []
