@@ -34,8 +34,9 @@ class Maze:
                          for _ in range(self.grid_h)]
             self.walls = self._generate_edges()
 
-            # initialized in __init__
-            self.weighed_grid = self._generate_weighed_grid(weighed_grid_range)
+            # initialized in __init__ but the grid is not generated yet
+            self.weighed_grid_range = weighed_grid_range
+            self.weighed_grid = self._generate_weighed_grid()
         else:
             self.grid_w = width
             self.grid_h = height
@@ -43,7 +44,7 @@ class Maze:
             self.height = (height - 1) // 2
             self.grid = grid
 
-    def _generate_weighed_grid(self, range: int) -> List[List[int]]:
+    def _generate_weighed_grid(self) -> List[List[int]]:
         """
         Generates a grid with weights equal number of walls around each
         non-wall cell (0) in the grid.
@@ -59,16 +60,55 @@ class Maze:
             for x in range(self.grid_w):
                 if self.grid[y][x] == 1:
                     continue
-                for dy in range(-range, range + 1):
-                    for dx in range(-range, range + 1):
-                        if abs(dy) + abs(dx) > range:
-                            continue
+                for dy in range(-self.weighed_grid_range,
+                                self.weighed_grid_range + 1):
+
+                    for dx in range(-self.weighed_grid_range,
+                                    self.weighed_grid_range + 1):
+
+                        # check only in the circle range, not square
+                        # if abs(dy) + abs(dx) > filter_range:
+                        #     continue
                         nx, ny = x + dx, y + dy
                         if 0 <= nx < self.grid_w and 0 <= ny < self.grid_h:
                             if self.grid[ny][nx] == 1:
                                 weighed_grid[y][x] += 1
 
         return weighed_grid
+
+    def get_reward(self, pos: Tuple[int, int]) -> float:
+        """
+        Returns the reward for a given cell in the grid.
+        The reward is a NEGATIVE number, depending on the number of walls
+        around the cell. The more walls, the lower the reward.
+        The reward is scaled according to the range of weighed_grid.
+
+        :param pos: The coordinates of the cell
+        :return: The reward for the cell
+        """
+        x, y = pos
+        if self.grid[y][x] == 1:
+            raise ValueError("Cannot get reward for a wall cell")
+        else:
+            # reward is negative, the more walls, the lower the reward
+            return -self.weighed_grid[y][x] / (self.weighed_grid_range * 4)
+
+    def plot_weighed_grid(self) -> None:
+        """
+        Plots the weighed grid using matplotlib.
+        The grid is displayed with a color map, where the color represents
+        the weight of each cell.
+        """
+        print(self.weighed_grid)
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.imshow(self.weighed_grid, cmap="hot")
+        ax.set_title("Ważona siatka")
+        ax.axis("off")
+        plt.show()
+
+    def test_weighed_grid(self) -> None:
+        self.weighed_grid = self._generate_weighed_grid()
+        self.plot_weighed_grid()
 
     def _generate_edges(self):
         walls = []
@@ -200,3 +240,9 @@ class Maze:
 def loadMatrix(filename: str) -> List[List[int]]:
     with open(filename, "rb") as file:
         return pickle.load(file)
+
+
+if __name__ == "__main__":
+    maze = Maze(10, 10)
+    maze.generate()
+    maze.test_weighed_grid()
