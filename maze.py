@@ -1,8 +1,11 @@
 import random
+import time
 from typing import List, Tuple, Optional
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, BoundaryNorm
 import pickle
+import numpy as np
+from scipy.ndimage import convolve
 
 
 class DisjointSet:
@@ -36,7 +39,7 @@ class Maze:
 
             # initialized in __init__ but the grid is not generated yet
             self.weighed_grid_range = weighed_grid_range
-            self.weighed_grid = self._generate_weighed_grid()
+            # self.weighed_grid = self._generate_weighed_grid()
         else:
             self.grid_w = width
             self.grid_h = height
@@ -56,25 +59,43 @@ class Maze:
         """
         weighed_grid = [[0 for _ in range(self.grid_w)]
                         for _ in range(self.grid_h)]
+        offsets = []
+        for dy in range(-self.weighed_grid_range, self.weighed_grid_range + 1):
+            for dx in range(-self.weighed_grid_range, self.weighed_grid_range + 1):
+                offsets.append((dx, dy))
+
         for y in range(self.grid_h):
             for x in range(self.grid_w):
                 if self.grid[y][x] == 1:
                     continue
-                for dy in range(-self.weighed_grid_range,
-                                self.weighed_grid_range + 1):
-
-                    for dx in range(-self.weighed_grid_range,
-                                    self.weighed_grid_range + 1):
-
-                        # check only in the circle range, not square
-                        # if abs(dy) + abs(dx) > filter_range:
-                        #     continue
-                        nx, ny = x + dx, y + dy
-                        if 0 <= nx < self.grid_w and 0 <= ny < self.grid_h:
-                            if self.grid[ny][nx] == 1:
-                                weighed_grid[y][x] += 1
+                for dx, dy in offsets:
+                    # check only in the circle range, not square
+                    # if abs(dy) + abs(dx) > filter_range:
+                    #     continue
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < self.grid_w and 0 <= ny < self.grid_h:
+                        if self.grid[ny][nx] == 1:
+                            weighed_grid[y][x] += 1
 
         return weighed_grid
+
+    def _generate_weighed_grid_convolution(self) -> np.ndarray:
+        """
+        Generates a grid with weights equal number of walls around each
+        non-wall cell (0) in the grid using convolution.
+        """
+        numpy_grid = np.array(self.grid)
+
+        kernel_size = 2 * self.weighed_grid_range + 1
+        # maly rozmiar dla duzych labiryntow
+        kernel = np.ones((kernel_size, kernel_size), dtype=np.uint8)
+
+        wall_counts = convolve(numpy_grid.astype(np.uint8), kernel,
+                               mode='constant', cval=0, output=np.int16)
+
+        wall_counts[numpy_grid == 1] = 0
+
+        return wall_counts
 
     def get_reward(self, pos: Tuple[int, int]) -> float:
         """
@@ -99,7 +120,7 @@ class Maze:
         The grid is displayed with a color map, where the color represents
         the weight of each cell.
         """
-        print(self.weighed_grid)
+        # print(self.weighed_grid)
         fig, ax = plt.subplots(figsize=(10, 10))
         ax.imshow(self.weighed_grid, cmap="hot")
         ax.set_title("Ważona siatka")
@@ -107,8 +128,27 @@ class Maze:
         plt.show()
 
     def test_weighed_grid(self) -> None:
-        self.weighed_grid = self._generate_weighed_grid()
+        start_time = time.time()
+        normal_grid = self._generate_weighed_grid()
+        end_time = time.time()
+        print(f"Time taken to generate weighed grid: {
+              end_time - start_time:.4f} seconds")
+
+        start_time = time.time()
+        convolution_grid = self._generate_weighed_grid_convolution()
+        end_time = time.time()
+        print(f"Time taken to generate weighed grid (convolution): {
+              end_time - start_time:.4f} seconds")
+
+        self.weighed_grid = normal_grid
         self.plot_weighed_grid()
+
+        self.weighed_grid = convolution_grid
+        self.plot_weighed_grid()
+
+        assert np.array_equal(
+            np.array(normal_grid), np.array(convolution_grid)), "Grids are not equal"
+        print("Grids are equal!!!")
 
     def _generate_edges(self):
         walls = []
@@ -161,6 +201,8 @@ class Maze:
 
         self.grid[1][0] = 0
         self.grid[self.grid_h - 2][self.grid_w - 1] = 0
+
+        self.weighed_grid = self._generate_weighed_grid()
 
     def draw(self) -> None:
         fig, ax = plt.subplots(figsize=(10, 10))
@@ -243,6 +285,6 @@ def loadMatrix(filename: str) -> List[List[int]]:
 
 
 if __name__ == "__main__":
-    maze = Maze(10, 10)
+    maze = Maze(100, 100)
     maze.generate()
     maze.test_weighed_grid()
