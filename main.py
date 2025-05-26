@@ -34,7 +34,7 @@ def aStarOnlyBenchmark():
 
         entry = (0, 1)
         exit = (maze.grid_w - 1, maze.grid_h - 2)
-        path, executionTime, nodesVisited = aStar(maze.grid, entry, exit)
+        path, executionTime, nodesVisited, _ = aStar(maze.grid, entry, exit)
         if path is not None:
             # maze.drawWithPath(path, "A*")
             print("A* BENCHMARK:")
@@ -76,7 +76,7 @@ def main():
     else:
         print("Path wasn't found")
 
-    path, executionTime, nodesVisited = aStar(maze.grid, start, goal)
+    path, executionTime, nodesVisited, _ = aStar(maze.grid, start, goal)
     res.append(path)
     if path is not None:
         # maze.drawWithPath(path, "A*")

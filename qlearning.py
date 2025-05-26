@@ -3,14 +3,15 @@ import time
 import random
 import numpy as np
 import pickle
-from a_star import h
+from a_star import manhattan_h
+from maze import Maze
 # from hh_learn_test import HeuristicLearner
 
 
 class Model:
     def __init__(
         self,
-        matrix: List[List[int]],
+        matrix: Maze,
         entry: Tuple[int, int],
         goal: Tuple[int, int],
         episodes: int,
@@ -92,8 +93,8 @@ class Model:
                 d_x, d_y = self.directions[move_idx]
                 next_x, next_y = x + d_x, y + d_y
 
-                old_dist = h((self.goal[0], self.goal[1]), (x, y))
-                new_dist = h((self.goal[0], self.goal[1]), (next_x, next_y))
+                old_dist = manhattan_h((self.goal[0], self.goal[1]), (x, y))
+                new_dist = manhattan_h((self.goal[0], self.goal[1]), (next_x, next_y))
 
                 if (next_x, next_y) == self.goal:
                     r = self.reward

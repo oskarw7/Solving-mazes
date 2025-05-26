@@ -13,9 +13,15 @@ class HeuristicFeatureExtractor:
     Extracts features from maze states that can be used to learn heuristics
     """
 
-    def __init__(self, maze_grid: List[List[int]]):
+    def __init__(
+        self, maze_grid: List[List[int]], weighed_grid: List[List[int]] = None
+    ):
         self.grid = np.array(maze_grid)
         self.height, self.width = self.grid.shape
+        if weighed_grid is not None:
+            self.weighed_grid = np.array(weighed_grid)
+        else:
+            self.weighed_grid = np.ones_like(self.grid, dtype=np.int8)
 
     def extract_features(
         self, pos: Tuple[int, int], goal: Tuple[int, int]
@@ -35,7 +41,7 @@ class HeuristicFeatureExtractor:
                 abs(x - gx),  # Manhattan distance X
                 abs(y - gy),  # Manhattan distance Y
                 # Chebyshev distance
-                max(abs(x - gx), abs(y - gy)),
+                # max(abs(x - gx), abs(y - gy)),
             ]
         )
 
@@ -64,6 +70,43 @@ class HeuristicFeatureExtractor:
             wall_counts.append(count / cells if cells > 0 else 0)
         features.extend(wall_counts)
 
+        # WEIGHTED GRID FEATURES - Key addition for crowding penalties
+        if self.weighed_grid is not None:
+            # Current position weight (crowding penalty)
+            current_weight = (
+                self.weighed_grid[y][x]
+                if 0 <= x < self.width and 0 <= y < self.height
+                else 0
+            )
+            features.append(current_weight)
+
+            # Average weight in surrounding area (local crowding)
+            weight_sums = []
+            for radius in [1, 2, 3]:
+                total_weight = 0
+                cells = 0
+                for dy in range(-radius, radius + 1):
+                    for dx in range(-radius, radius + 1):
+                        nx, ny = x + dx, y + dy
+                        if (
+                            0 <= nx < self.width
+                            and 0 <= ny < self.height
+                            and self.grid[ny][nx] == 0
+                        ):
+                            total_weight += self.weighed_grid[ny][nx]
+                            cells += 1
+                avg_weight = total_weight / cells if cells > 0 else 0
+                weight_sums.append(avg_weight)
+            features.extend(weight_sums)
+
+            # Weight gradient towards goal (is path getting more or less crowded?)
+            weight_gradient = self._calculate_weight_gradient(pos, goal)
+            features.append(weight_gradient)
+
+            # Minimum weight path estimate (rough estimate of best possible route)
+            min_weight_estimate = self._estimate_min_weight_path(pos, goal)
+            features.append(min_weight_estimate)
+
         # sprawdzenie czy sciezka jest zablokowana
         direct_blocked = self._count_walls_in_line(pos, goal)
         features.append(direct_blocked)
@@ -85,6 +128,94 @@ class HeuristicFeatureExtractor:
         features.extend(visibility)
 
         return np.array(features, dtype=np.float32)
+
+    def _calculate_weight_gradient(
+        self, pos: Tuple[int, int], goal: Tuple[int, int]
+    ) -> float:
+        """
+        Calculate if moving towards goal increases or decreases crowding
+        Positive value means getting more crowded, negative means less crowded
+        """
+        if self.weighed_grid is None:
+            return 0.0
+
+        x, y = pos
+        gx, gy = goal
+
+        # Sample points along the direct line to goal
+        steps = max(abs(gx - x), abs(gy - y))
+        if steps == 0:
+            return 0.0
+
+        weights_along_path = []
+        for i in range(min(steps, 10)):  # Sample up to 10 points
+            progress = (i + 1) / min(steps, 10)
+            sample_x = int(x + (gx - x) * progress)
+            sample_y = int(y + (gy - y) * progress)
+
+            if 0 <= sample_x < self.width and 0 <= sample_y < self.height:
+                if self.grid[sample_y][sample_x] == 0:  # Not a wall
+                    weights_along_path.append(self.weighed_grid[sample_y][sample_x])
+
+        if len(weights_along_path) < 2:
+            return 0.0
+
+        # Calculate trend: positive = getting more crowded, negative = less crowded
+        start_avg = np.mean(weights_along_path[: len(weights_along_path) // 2])
+        end_avg = np.mean(weights_along_path[len(weights_along_path) // 2 :])
+
+        return end_avg - start_avg
+
+    def _estimate_min_weight_path(
+        self, pos: Tuple[int, int], goal: Tuple[int, int]
+    ) -> float:
+        """
+        Rough estimate of minimum weight path to goal
+        """
+        if self.weighed_grid is None:
+            return 0.0
+
+        x, y = pos
+        gx, gy = goal
+
+        # Simple sampling approach: check a few potential paths
+        min_avg_weight = float("inf")
+
+        # Direct path
+        direct_weights = []
+        steps = max(abs(gx - x), abs(gy - y))
+        for i in range(steps + 1):
+            if steps == 0:
+                sample_x, sample_y = x, y
+            else:
+                sample_x = int(x + (gx - x) * i / steps)
+                sample_y = int(y + (gy - y) * i / steps)
+
+            if 0 <= sample_x < self.width and 0 <= sample_y < self.height:
+                if self.grid[sample_y][sample_x] == 0:
+                    direct_weights.append(self.weighed_grid[sample_y][sample_x])
+
+        if direct_weights:
+            min_avg_weight = min(min_avg_weight, np.mean(direct_weights))
+
+        # Sample a few alternative paths (simplified)
+        for offset in [-1, 0, 1]:
+            alt_weights = []
+            mid_x = (x + gx) // 2 + offset
+            mid_y = (y + gy) // 2 + offset
+
+            if 0 <= mid_x < self.width and 0 <= mid_y < self.height:
+                if self.grid[mid_y][mid_x] == 0:
+                    # Path through midpoint
+                    for px, py in [(x, y), (mid_x, mid_y), (gx, gy)]:
+                        if 0 <= px < self.width and 0 <= py < self.height:
+                            if self.grid[py][px] == 0:
+                                alt_weights.append(self.weighed_grid[py][px])
+
+                    if alt_weights:
+                        min_avg_weight = min(min_avg_weight, np.mean(alt_weights))
+
+        return min_avg_weight if min_avg_weight != float("inf") else 0.0
 
     def _count_walls_in_line(
         self, start: Tuple[int, int], end: Tuple[int, int]
@@ -229,8 +360,14 @@ class HeuristicLearner:
     Main class for learning heuristics from maze solving experience
     """
 
-    def __init__(self, maze_grid: List[List[int]], device="cpu"):
+    def __init__(
+        self,
+        maze_grid: List[List[int]],
+        weighed_grid: List[List[int]] = None,
+        device="cpu",
+    ):
         self.maze_grid = maze_grid
+        self.weighed_grid = weighed_grid
         self.feature_extractor = HeuristicFeatureExtractor(maze_grid)
         self.device = device
 
@@ -247,13 +384,29 @@ class HeuristicLearner:
         self, start: Tuple[int, int], goal: Tuple[int, int], path: List[Tuple[int, int]]
     ):
         """
-        Collect training data from A* solutions
-        Target heuristic = actual remaining distance to goal
+        Collect training data from A* solutions with weighed penalties
+        Target heuristic = remaining distance + accumulated weight penalties
         """
         for i, pos in enumerate(path):
             remaining_steps = len(path) - 1 - i
+
+            # Calculate weight penalty for remaining path
+            weight_penalty = 0.0
+            if self.weighed_grid is not None:
+                for j in range(i, len(path)):
+                    px, py = path[j]
+                    if 0 <= px < len(self.weighed_grid[0]) and 0 <= py < len(
+                        self.weighed_grid
+                    ):
+                        # Use the maze's reward system (negative for higher weights)
+                        weight_penalty += self.maze.get_reward((px, py))
+
             features = self.feature_extractor.extract_features(pos, goal)
-            self.training_data.append((features, remaining_steps))
+            # Combine distance and weight penalty
+            target_heuristic = (
+                remaining_steps - weight_penalty
+            )  # Negative weight_penalty makes this larger
+            self.training_data.append((features, target_heuristic))
 
     def collect_training_data_from_qlearning(
         self, q_table: List[List[List[float]]], goal: Tuple[int, int]
@@ -270,6 +423,13 @@ class HeuristicLearner:
                     features = self.feature_extractor.extract_features((x, y), goal)
                     # Use max Q-value as heuristic estimate
                     heuristic_value = max(q_table[y][x]) if q_table[y][x] else 0
+
+                    weighed_penalty = 0.0
+                    if self.weighed_grid is not None:
+                        # Apply weighed penalty based on the grid
+                        weighed_penalty = self.weighed_grid[y][x]
+
+                    heuristic_value -= weighed_penalty  # Adjust heuristic by penalty
                     self.training_data.append((features, heuristic_value))
 
     def train(self, epochs: int = 1000, batch_size: int = 32):
@@ -351,7 +511,7 @@ class HeuristicLearner:
 
 # full wygenerowane, blueprint do naszej implementacji
 def learned_heuristic_astar(
-    maze: "Maze",
+    maze: Maze,
     start: Tuple[int, int],
     goal: Tuple[int, int],
     heuristic_learner: HeuristicLearner,
@@ -394,6 +554,15 @@ def learned_heuristic_astar(
                 and 0 <= ny < maze.grid_h
                 and maze.grid[ny][nx] == 0
             ):
+                # Calculate step cost including weight penalty
+                step_cost = 1.0
+                if hasattr(maze, "weighed_grid") and maze.weighed_grid is not None:
+                    try:
+                        # Add weight penalty to step cost
+                        weight_penalty = maze.get_reward(neighbor)
+                        step_cost += weight_penalty
+                    except:
+                        pass
                 tentative_g = g_score[current] + 1
 
                 if neighbor not in g_score or tentative_g < g_score[neighbor]:
@@ -411,6 +580,7 @@ def learned_heuristic_astar(
 def integrate():
     maze = Maze(50, 50)
     maze.generate()
+    maze.weighed_grid = maze.generate_weighed_grid_convolution()
 
     heuristic_learner = HeuristicLearner(maze.grid)
 
@@ -454,7 +624,7 @@ def integrate():
         )
         print(f"Collected data for start: {(sx, sy)}, goal: {(gx, gy)}")
 
-    heuristic_learner.train(epochs=500)
+    heuristic_learner.train(epochs=250)
 
     # zapis modelu
     heuristic_learner.save_model("learned_heuristic.pth")
