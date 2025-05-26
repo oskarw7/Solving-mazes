@@ -4,7 +4,7 @@ import random
 import numpy as np
 import pickle
 from a_star import h
-from h_learn import HyperHeuristicController
+# from hh_learn_test import HeuristicLearner
 
 
 class Model:
@@ -23,8 +23,6 @@ class Model:
 
         self.width = len(matrix[0])
         self.height = len(matrix)
-
-        self.h_controller = HyperHeuristicController(episodes)
 
         self.qtable = [
             [[0.0 for _ in range(4)] for _ in range(self.width)]
@@ -64,12 +62,13 @@ class Model:
         epsilon = 1
         max_steps = self.width * self.height
 
+        # heuristic_learner = HeuristicLearner(self.matrix)
+
         for ep in range(self.episodes):
             position = self.entry
             steps = 0
             epsilon = max(self.epsilon_min, epsilon * self.epsilon_decay)
-            alpha = max(self.alpha_min, self.alpha_zero /
-                        (1 + ep * self.alpha_decay))
+            alpha = max(self.alpha_min, self.alpha_zero / (1 + ep * self.alpha_decay))
 
             while position != self.goal:
                 x, y = position
@@ -110,8 +109,7 @@ class Model:
                 position = (next_x, next_y)
 
             if not (ep + 1) % (self.episodes // 10):
-                print(f"Training {
-                      (10 * (ep + 1) / (self.episodes // 10)):.2f}% done")
+                print(f"Training {(10 * (ep + 1) / (self.episodes // 10)):.2f}% done")
 
         return time.time() - startTime, nodesVisited
 

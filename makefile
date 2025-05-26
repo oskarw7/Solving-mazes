@@ -1,3 +1,7 @@
+train:
+	@echo "Training the model..."
+	@python3 hh_learn_test.py
+
 run: check
 	@echo "Running the main script..."
 	@python3 main.py
@@ -8,7 +12,7 @@ maze:
 
 
 check:
-	ruff check
+	@ruff check
 
 format:
 	ruff format

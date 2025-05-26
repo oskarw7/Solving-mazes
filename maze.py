@@ -10,8 +10,7 @@ from scipy.ndimage import convolve
 
 class DisjointSet:
     def __init__(self, width, height):
-        self.parent = {(x, y): (x, y) for y in range(height)
-                       for x in range(width)}
+        self.parent = {(x, y): (x, y) for y in range(height) for x in range(width)}
 
     def find(self, cell):
         if self.parent[cell] != cell:
@@ -33,8 +32,7 @@ class Maze:
             self.height = height
             self.grid_w = 2 * width + 1
             self.grid_h = 2 * height + 1
-            self.grid = [[1 for _ in range(self.grid_w)]
-                         for _ in range(self.grid_h)]
+            self.grid = [[1 for _ in range(self.grid_w)] for _ in range(self.grid_h)]
             self.walls = self._generate_edges()
 
             # initialized in __init__ but the grid is not generated yet
@@ -57,8 +55,7 @@ class Maze:
 
         :return: A grid with weights and zeroes for walls
         """
-        weighed_grid = [[0 for _ in range(self.grid_w)]
-                        for _ in range(self.grid_h)]
+        weighed_grid = [[0 for _ in range(self.grid_w)] for _ in range(self.grid_h)]
         offsets = []
         for dy in range(-self.weighed_grid_range, self.weighed_grid_range + 1):
             for dx in range(-self.weighed_grid_range, self.weighed_grid_range + 1):
@@ -79,7 +76,7 @@ class Maze:
 
         return weighed_grid
 
-    def _generate_weighed_grid_convolution(self) -> np.ndarray:
+    def generate_weighed_grid_convolution(self) -> np.ndarray:
         """
         Generates a grid with weights equal number of walls around each
         non-wall cell (0) in the grid using convolution.
@@ -90,8 +87,13 @@ class Maze:
         # maly rozmiar dla duzych labiryntow
         kernel = np.ones((kernel_size, kernel_size), dtype=np.uint8)
 
-        wall_counts = convolve(numpy_grid.astype(np.uint8), kernel,
-                               mode='constant', cval=0, output=np.int16)
+        wall_counts = convolve(
+            numpy_grid.astype(np.uint8),
+            kernel,
+            mode="constant",
+            cval=0,
+            output=np.int16,
+        )
 
         wall_counts[numpy_grid == 1] = 0
 
@@ -112,7 +114,7 @@ class Maze:
             raise ValueError("Cannot get reward for a wall cell")
         else:
             # reward is negative, the more walls, the lower the reward
-            return -self.weighed_grid[y][x] / (self.weighed_grid_range * 4)
+            return self.weighed_grid[y][x] / (self.weighed_grid_range * 4)
 
     def plot_weighed_grid(self) -> None:
         """
@@ -131,14 +133,18 @@ class Maze:
         start_time = time.time()
         normal_grid = self._generate_weighed_grid()
         end_time = time.time()
-        print(f"Time taken to generate weighed grid: {
-              end_time - start_time:.4f} seconds")
+        print(
+            f"Time taken to generate weighed grid: {end_time - start_time:.4f} seconds"
+        )
 
         start_time = time.time()
-        convolution_grid = self._generate_weighed_grid_convolution()
+        convolution_grid = self.generate_weighed_grid_convolution()
         end_time = time.time()
-        print(f"Time taken to generate weighed grid (convolution): {
-              end_time - start_time:.4f} seconds")
+        print(
+            f"Time taken to generate weighed grid (convolution): {
+                end_time - start_time:.4f
+            } seconds"
+        )
 
         self.weighed_grid = normal_grid
         self.plot_weighed_grid()
@@ -146,8 +152,9 @@ class Maze:
         self.weighed_grid = convolution_grid
         self.plot_weighed_grid()
 
-        assert np.array_equal(
-            np.array(normal_grid), np.array(convolution_grid)), "Grids are not equal"
+        assert np.array_equal(np.array(normal_grid), np.array(convolution_grid)), (
+            "Grids are not equal"
+        )
         print("Grids are equal!!!")
 
     def _generate_edges(self):
@@ -244,15 +251,15 @@ class Maze:
                     gridWithPath[y][x] = val
 
         # 0 - white (empty), 1 - black (wall), 2 - magenta (dfs), 3 - brown (astar), 4 - green (qlearning)
-        colorMap = ListedColormap(
-            ["white", "black", "magenta", "brown", "cyan"])
+        colorMap = ListedColormap(["white", "black", "magenta", "brown", "cyan"])
         bounds = [0, 0.5, 1.5, 2.5, 3.5, 4.5]
         boundaryNorm = BoundaryNorm(bounds, colorMap.N)
 
         fig, ax = plt.subplots(figsize=(10, 10))
         ax.imshow(gridWithPath, cmap=colorMap, norm=boundaryNorm)
         ax.set_title(
-            "Ścieżki utworzone przez DFS (magenta), A* (brown), Q-learning (cyan)")
+            "Ścieżki utworzone przez DFS (magenta), A* (brown), Q-learning (cyan)"
+        )
         ax.axis("off")
         plt.show()
 
@@ -272,7 +279,11 @@ class Maze:
                 nodes.append(idx)
                 for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                     nx, ny = x + dx, y + dy
-                    if 0 <= nx < self.grid_w and 0 <= ny < self.grid_h and self.grid[ny][nx] == 0:
+                    if (
+                        0 <= nx < self.grid_w
+                        and 0 <= ny < self.grid_h
+                        and self.grid[ny][nx] == 0
+                    ):
                         nidx = ny * self.grid_w + nx
                         edges.append((idx, nidx))
 
@@ -286,5 +297,4 @@ def loadMatrix(filename: str) -> List[List[int]]:
 
 if __name__ == "__main__":
     maze = Maze(100, 100)
-    maze.generate()
     maze.test_weighed_grid()

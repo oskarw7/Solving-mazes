@@ -15,8 +15,7 @@ def dfsOnlyBenchmark():
 
         entry = (0, 1)
         exit = (maze.grid_w - 1, maze.grid_h - 2)
-        path, executionTime, nodesVisited = dfsIterative(
-            maze.grid, entry, exit)
+        path, executionTime, nodesVisited = dfsIterative(maze.grid, entry, exit)
         if path is not None:
             # maze.drawWithPath(path, "DFS")
             print("DFS BENCHMARK:")
