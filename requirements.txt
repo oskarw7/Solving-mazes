@@ -3,3 +3,4 @@ numpy==2.2.5
 debugpy==1.8.14
 ruff
 scipy
+torch

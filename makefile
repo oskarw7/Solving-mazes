@@ -1,3 +1,6 @@
+test:
+	@echo "Testing model..."
+	@python3 test_learned.py
 
 run: check
 	@echo "Running the main script..."

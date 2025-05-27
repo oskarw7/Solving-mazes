@@ -1,6 +1,6 @@
 import random
 import time
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, BoundaryNorm
 import pickle
@@ -258,7 +258,7 @@ class Maze:
         fig, ax = plt.subplots(figsize=(10, 10))
         ax.imshow(gridWithPath, cmap=colorMap, norm=boundaryNorm)
         ax.set_title(
-            "Ścieżki utworzone przez DFS (magenta), A* (brown), Q-learning (cyan)"
+            "Ścieżki znalezione przez algorytmy"
         )
         ax.axis("off")
         plt.show()

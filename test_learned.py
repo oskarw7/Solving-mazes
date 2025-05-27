@@ -91,6 +91,6 @@ if __name__ == "__main__":
         print(
             f"Found path with {len(path)} steps using A* in {executionTime:.2f} seconds, visited {nodesVisited} nodes, total weight: {totalWeight}"
         )
-        res.append(path)
+    res.append(path)
 
     maze.drawAll(res)
