@@ -235,9 +235,9 @@ class Maze:
         boundaryNorm = BoundaryNorm(bounds, colorMap.N)
         fig, ax = plt.subplots(figsize=(10, 10))
         ax.imshow(gridWithPath, cmap=colorMap, norm=boundaryNorm)
-        ax.set_title(f"Ścieżka utworzona przez {method}")
+        ax.set_title(f"Ścieżka utworzona przez {method} dla labiryntu {self.width}x{self.height}")
         ax.axis("off")
-        # plt.savefig(f"{method}_path.png", dpi=300)
+        plt.savefig(f"images/{method}_path.png", dpi=300)
         plt.show()
 
     def drawAll(self, paths: List[List[Tuple[int, int]]]) -> None:
