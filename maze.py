@@ -3,6 +3,7 @@ import time
 from typing import List, Tuple, Optional, Dict
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, BoundaryNorm
+from matplotlib.patches import Patch
 import pickle
 import numpy as np
 from scipy.ndimage import convolve
@@ -141,9 +142,7 @@ class Maze:
         convolution_grid = self.generate_weighed_grid_convolution()
         end_time = time.time()
         print(
-            f"Time taken to generate weighed grid (convolution): {
-                end_time - start_time:.4f
-            } seconds"
+            f"Time taken to generate weighed grid (convolution): {end_time - start_time:.4f} seconds"
         )
 
         self.weighed_grid = normal_grid
@@ -235,7 +234,9 @@ class Maze:
         boundaryNorm = BoundaryNorm(bounds, colorMap.N)
         fig, ax = plt.subplots(figsize=(10, 10))
         ax.imshow(gridWithPath, cmap=colorMap, norm=boundaryNorm)
-        ax.set_title(f"Ścieżka utworzona przez {method} dla labiryntu {self.width}x{self.height}")
+        ax.set_title(
+            f"Ścieżka utworzona przez {method} dla labiryntu {self.width}x{self.height}"
+        )
         ax.axis("off")
         plt.savefig(f"images/{method}_path.png", dpi=300)
         plt.show()
@@ -250,18 +251,26 @@ class Maze:
                 if gridWithPath[y][x] == 0:
                     gridWithPath[y][x] = val
 
-        # 0 - white (empty), 1 - black (wall), 2 - magenta (dfs), 3 - brown (astar), 4 - green (qlearning)
+        # 0 - white (empty), 1 - black (wall), 2 - magenta (DFS), 3 - brown (A*), 4 - cyan (Q-learning)
         colorMap = ListedColormap(["white", "black", "magenta", "brown", "cyan"])
         bounds = [0, 0.5, 1.5, 2.5, 3.5, 4.5]
         boundaryNorm = BoundaryNorm(bounds, colorMap.N)
 
         fig, ax = plt.subplots(figsize=(10, 10))
         ax.imshow(gridWithPath, cmap=colorMap, norm=boundaryNorm)
-        ax.set_title(
-            "Ścieżki znalezione przez algorytmy"
-        )
+        ax.set_title("Ścieżki znalezione przez algorytmy")
         ax.axis("off")
-        plt.show()
+
+        # Legenda
+        legend_elements = [
+            Patch(facecolor="magenta", edgecolor="black", label="DFS"),
+            Patch(facecolor="brown", edgecolor="black", label="A*"),
+            Patch(facecolor="cyan", edgecolor="black", label="Q-learning"),
+        ]
+        ax.legend(handles=legend_elements, loc="upper right", frameon=True)
+
+        plt.savefig("qlearning-vs-others.png", dpi=300)
+        # plt.show()
 
     def saveMatrix(self, filename: str) -> None:
         with open(filename, "wb") as file:

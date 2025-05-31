@@ -47,9 +47,78 @@ Politechnika Gdańska, WETI}
 
 \subsection{Q-learning}
 	TODO: MIKOŁAJ % opis problemow, zalozen, parametrow i wygenerowac sciezke 
-	
-\subsection{Porównanie}
-	TODO: ??? % wygenerowac wszystkie sciezki na jednym plocie i porownac czasy, dlugosc sciezki i liczbe odwiedzonych wezlow	
+    \subsubsection{Parametry}
+    Dostępne parametry:
+    \begin{itemize}
+        \item alpha - learning rate
+        \item beta - discount factor, faworyzacja późniejszych nagród
+        \item epsilon - szansa na eksplorację (losowa akcja)
+        \item episodes - liczba iteracji
+    \end{itemize}
+    Dobór parametrów ma duży wpływ na wydajnośc algorytmu.
+
+    \subsubsection*{Episodes}
+    Liczbę epizodów stosunkowo łatwo wybrać, wystarczy kilka razy włączyć program, żeby zobaczyć jaka jest ich najlepsza liczba w stosunku do czasu wykonania.
+    W przypadku naszego algorytmu było to \textbf{5000}.
+    Dla epizodów w liczbie 500-3000 wyniki nie były zadowalające, a epizody 5000-10000 miały pomijalnie mały wpływ na wydajność wytrenowanego modelu, a kosztowały czas.
+    
+    \subsubsection*{Beta}
+    Ze względu na dużą liczbę epizodów oraz fakt, że dotarcie do wyjścia labiryntu oferowało dużą nagrodę, należało dobrać taki discount factor, żeeby model faworyzował późniejsze nagrody.
+    W implementacji wynosi \textbf{0.99}.
+
+    \subsubsection*{Alpha oraz epsilon}
+    Zarówno $\epsilon$ jak i $\alpha$ w początkowych etapach był stałe, jednak po kilku próbach można było zauważyć, że nie jest to optymalne rozwiązanie.
+
+    Lepszym sposobem jest zwiększenie tempa nauki oraz eksploracji w początkowych fazach trenowania, ponieważ model nie jest w stanie osiągnąć celu i heurystyka pomaga wypełniać qtable dobrymi wartościami.
+    
+    Ostatecznie w każdym epizodzie:
+    \begin{itemize}
+        \item \texttt{$\epsilon$ = max($\epsilon_{min}$, $\epsilon * \epsilon_{decay}$)}
+        \item \texttt{$\alpha$ = max($\alpha_{min}$, $\frac{\alpha_0}{1 + ep * \alpha_{decay}}$)}
+    \end{itemize}
+    
+    gdzie:
+    \begin{itemize}
+        \item $\epsilon_{min} = 0.1$
+        \item $\epsilon_{decay} = \sqrt[ep]{\epsilon_{min}}$\
+        \item $\alpha_{min} = 0.01$
+        \item $\alpha_0 = 0.5$
+        \item $\alpha_{decay} = 0.001$
+        \item $ep$ to numer aktualnego epizodu
+    \end{itemize}
+
+    Takie wartości uznaliśmy za optymalne przy postawionym problemie i skutecznie maksymalizują one stosunek wydajności wytrenowanego modelu do czasu nauki.
+
+    \subsubsection{Nagrody}
+    Kolejnym problemem napotkanym przy implementowaniu  algorytmu był dobór nagród.
+    Nagroda musi być na tyle duża, żeby miała wpływ na wybraną ścieżkę, jednak na tyle mała, że nie zamknie się on na pierwsze znalezione rozwiązanie.
+    
+    Dużym usprawnieniem działania było dodanie heurystyki opartej o manhattan distance agenta od celu.
+    W każdej iteracji agent dostaje informację czy jest bliżej (\texttt{reward = 1}), bądź dalej (\texttt{reward = -1}).
+    W przypadku dojścia do celu nagroda jest równoważna z długością ścieżki znalezioną przez algorytm A* (założenie, że jest to optymalna ścieżka).
+
+    
+    \subsection{Porównanie}
+	Poniżej pokazane jest porównanie wspomnianych do tej pory algorytmów A*, DFS oraz Q-Learning:
+    \begin{center}
+        \includegraphics[width=0.7\textwidth]{images/qlearning-vs-others.png}    
+    \end{center}
+
+    Oraz tabela przedstawiająca ich wydajność:
+    \begin{table}[h!]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Algorytm} & \textbf{Długość ścieżki} & \textbf{Czas wykonania (s)} & \textbf{Odwiedzone węzły} \\
+\hline
+DFS        & 637  & 0.0045  & 857    \\
+A*         & 419  & 0.0332  & 11918  \\
+Q-Learning & 433  & 0.0013  & 432    \\
+\hline
+\end{tabular}
+\end{table}
+
+    Trening modelu zajął \texttt{22.55} sekundy, a liczba odwiedzonych węzłów przez cały proces to \texttt{109,992,906}.
 
 
 % ------DALSZE TODO------
