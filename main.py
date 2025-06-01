@@ -1,7 +1,7 @@
 from maze import Maze, loadMatrix
 from dfs import dfsIterative
 from a_star import aStar
-from qlearning import Model
+# from qlearning import Model
 import os
 import random
 import numpy as np
@@ -59,7 +59,7 @@ def main():
         print("MAZE LOADED FROM FILE")
         maze.grid = loadMatrix(f"{folder_name}/matrix.pkl")
     else:
-        maze.generate()
+        maze.generate(mazeType="dense_column")
     # maze.draw()
 
     start = (0, 1)
@@ -87,18 +87,18 @@ def main():
     else:
         print("Path wasn't found")
 
-    qmodel = Model(maze.grid, start, goal, 5000, len(path))
+    # qmodel = Model(maze.grid, start, goal, 5000, len(path))
 
-    if not (os.path.isdir(folder_name) and os.path.isfile(f"{folder_name}/model.pkl")):
-        executionTime, nodesVisited = qmodel.learn()
-        print("QLEARNING TRAINING:")
-        print(f"\tExecution time: {executionTime}")
-        print(f"\tTotal number of nodes visited: {nodesVisited}")
-    else:
-        print("QLEARNING LOADED MODEL FROM FILE")
-        qmodel.unserialize(f"{folder_name}/model.pkl")
-
-    path, executionTime, nodesVisited = qmodel.run()
+    # if not (os.path.isdir(folder_name) and os.path.isfile(f"{folder_name}/model.pkl")):
+    #     executionTime, nodesVisited = qmodel.learn()
+    #     print("QLEARNING TRAINING:")
+    #     print(f"\tExecution time: {executionTime}")
+    #     print(f"\tTotal number of nodes visited: {nodesVisited}")
+    # else:
+    #     print("QLEARNING LOADED MODEL FROM FILE")
+    #     qmodel.unserialize(f"{folder_name}/model.pkl")
+    #
+    # path, executionTime, nodesVisited = qmodel.run()
     res.append(path)
     if path is not None:
         # maze.drawWithPath(path, "qlearning")
@@ -113,7 +113,7 @@ def main():
 
     os.makedirs(folder_name, exist_ok=True)
     maze.saveMatrix(f"{folder_name}/matrix.pkl")
-    qmodel.serialize(f"{folder_name}/model.pkl")
+    # qmodel.serialize(f"{folder_name}/model.pkl")
 
     print(f"saved maze and model to directory {folder_name}/")
 

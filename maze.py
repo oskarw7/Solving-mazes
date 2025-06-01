@@ -167,7 +167,50 @@ class Maze:
         random.shuffle(walls)
         return walls
 
-    def generate(self):
+    def generate(self, mazeType: str = None) -> None:
+
+        # Create a matrix with weights symbolizing chance
+        # to destroy a wall between two cells
+        weights = np.zeros((self.grid_h, self.grid_w))
+        if mazeType == "middle":
+            for y in range(self.grid_h):
+                for x in range(self.grid_w):
+                    # chance depending on chebyshev distance from the center point
+                    chance = (
+                        1
+                        - (
+                            max(abs(x - self.grid_w // 2), abs(y - self.grid_h // 2))
+                            / max(self.grid_w, self.grid_h)
+                        )
+                        + 0.15
+                    )
+                    weights[y][x] = chance
+            # INFO: clip this value to avoid dead ends in the middle of the maze
+            weights = np.clip(weights, 0, 0.90)
+        elif mazeType == "dense_column":
+            for y in range(self.grid_h):
+                for x in range(self.grid_w):
+                    chance = 1 - abs(self.grid_w // 2 - x)/self.grid_w + 0.15
+                    weights[y][x] = chance
+            # INFO: clip this value to avoid dead ends
+            weights = np.clip(weights, 0, 0.95)
+
+        print(
+            "middle point chance distribution: ",
+            weights[self.grid_h // 2][self.grid_w // 2],
+        )
+        print("max chance: ", np.max(weights))
+        print("min chance: ", np.min(weights))
+        print("mean chance: ", np.mean(weights))
+
+        # plot the matrix density to check the distribution
+
+        plt.imshow(weights, cmap="hot", interpolation="nearest")
+        plt.colorbar()
+        plt.title("Matrix density")
+        plt.axis("off")
+        plt.show()
+
         ds = DisjointSet(self.width, self.height)
         for (x1, y1), (x2, y2) in self.walls:
             if ds.union((x1, y1), (x2, y2)):
@@ -178,25 +221,11 @@ class Maze:
                 self.grid[gy2][gx2] = 0
                 self.grid[(gy1 + gy2) // 2][(gx1 + gx2) // 2] = 0
 
-                if random.random() < 0.1:
-                    dx = gx2 - gx1
-                    dy = gy2 - gy1
-                    if dx == 0:
-                        for offset in [-1, 1]:
-                            if 0 <= gx1 + offset < self.grid_w:
-                                self.grid[gy1][gx1 + offset] = 0
-                                self.grid[gy2][gx2 + offset] = 0
-                                self.grid[(gy1 + gy2) // 2][
-                                    (gx1 + gx2) // 2 + offset
-                                ] = 0
-                    elif dy == 0:
-                        for offset in [-1, 1]:
-                            if 0 <= gy1 + offset < self.grid_h:
-                                self.grid[gy1 + offset][gx1] = 0
-                                self.grid[gy2 + offset][gx2] = 0
-                                self.grid[(gy1 + gy2) // 2 + offset][
-                                    (gx1 + gx2) // 2
-                                ] = 0
+                match mazeType:
+                    case None:
+                        self.randomThinOut(gx1, gy1, gx2, gy2)
+                    case _:
+                        self.customThinOut(gx1, gy1, gx2, gy2, weights)
 
         for x in range(self.grid_w):
             self.grid[0][x] = 1
@@ -208,7 +237,41 @@ class Maze:
         self.grid[1][0] = 0
         self.grid[self.grid_h - 2][self.grid_w - 1] = 0
 
-        self.weighed_grid = self._generate_weighed_grid()
+    def randomThinOut(self, gx1: int, gy1: int, gx2: int, gy2: int) -> None:
+        if random.random() < 0.1:
+            dx = gx2 - gx1
+            dy = gy2 - gy1
+            if dx == 0:
+                for offset in [-1, 1]:
+                    if 0 <= gx1 + offset < self.grid_w:
+                        self.grid[gy1][gx1 + offset] = 0
+                        self.grid[gy2][gx2 + offset] = 0
+                        self.grid[(gy1 + gy2) // 2][(gx1 + gx2) // 2 + offset] = 0
+            elif dy == 0:
+                for offset in [-1, 1]:
+                    if 0 <= gy1 + offset < self.grid_h:
+                        self.grid[gy1 + offset][gx1] = 0
+                        self.grid[gy2 + offset][gx2] = 0
+                        self.grid[(gy1 + gy2) // 2 + offset][(gx1 + gx2) // 2] = 0
+
+    def customThinOut(
+        self, gx1: int, gy1: int, gx2: int, gy2: int, weights: np.ndarray
+    ) -> None:
+        if weights[gy1][gx1] < random.random():
+            dx = gx2 - gx1
+            dy = gy2 - gy1
+            if dx == 0:
+                for offset in [-1, 1]:
+                    if 0 <= gx1 + offset < self.grid_w:
+                        self.grid[gy1][gx1 + offset] = 0
+                        self.grid[gy2][gx2 + offset] = 0
+                        self.grid[(gy1 + gy2) // 2][(gx1 + gx2) // 2 + offset] = 0
+            elif dy == 0:
+                for offset in [-1, 1]:
+                    if 0 <= gy1 + offset < self.grid_h:
+                        self.grid[gy1 + offset][gx1] = 0
+                        self.grid[gy2 + offset][gx2] = 0
+                        self.grid[(gy1 + gy2) // 2 + offset][(gx1 + gx2) // 2] = 0
 
     def draw(self) -> None:
         fig, ax = plt.subplots(figsize=(10, 10))
