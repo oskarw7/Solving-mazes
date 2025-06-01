@@ -57,15 +57,29 @@ class Maze:
         # labirynth dense in the middle, sparse on the edges
 
         weights = np.zeros((self.grid_h, self.grid_w))
-        for y in range(self.grid_h):
-            for x in range(self.grid_w):
-                # chance depending on chebyshev distance from the center point
-                chance = 1 - (
-                        max(abs(x - self.grid_w // 2), abs(y - self.grid_h // 2))
-                        / max(self.grid_w, self.grid_h)
-                ) + 0.2
-                weights[y][x] = chance
-        weights = np.clip(weights, 0, 1)
+        if mazeType == "middle":
+            for y in range(self.grid_h):
+                for x in range(self.grid_w):
+                    # chance depending on chebyshev distance from the center point
+                    chance = (
+                        1
+                        - (
+                            max(abs(x - self.grid_w // 2), abs(y - self.grid_h // 2))
+                            / max(self.grid_w, self.grid_h)
+                        )
+                        + 0.15
+                    )
+                    weights[y][x] = chance
+            # INFO: clip this value to avoid dead ends in the middle of the maze
+            weights = np.clip(weights, 0, 0.90)
+
+        print(
+            "middle point chance distribution: ",
+            weights[self.grid_h // 2][self.grid_w // 2],
+        )
+        print("max chance: ", np.max(weights))
+        print("min chance: ", np.min(weights))
+        print("mean chance: ", np.mean(weights))
 
         # plot the matrix density to check the distribution
 
@@ -110,20 +124,18 @@ class Maze:
                     if 0 <= gx1 + offset < self.grid_w:
                         self.grid[gy1][gx1 + offset] = 0
                         self.grid[gy2][gx2 + offset] = 0
-                        self.grid[(gy1 + gy2) // 2][
-                            (gx1 + gx2) // 2 + offset
-                        ] = 0
+                        self.grid[(gy1 + gy2) // 2][(gx1 + gx2) // 2 + offset] = 0
             elif dy == 0:
                 for offset in [-1, 1]:
                     if 0 <= gy1 + offset < self.grid_h:
                         self.grid[gy1 + offset][gx1] = 0
                         self.grid[gy2 + offset][gx2] = 0
-                        self.grid[(gy1 + gy2) // 2 + offset][
-                            (gx1 + gx2) // 2
-                        ] = 0
+                        self.grid[(gy1 + gy2) // 2 + offset][(gx1 + gx2) // 2] = 0
 
-    def customThinOut(self, gx1: int, gy1: int, gx2: int, gy2: int, weights: np.ndarray) -> None:
-        if weights[gy1][gx1] * weights[gy2][gx2] < random.random():
+    def customThinOut(
+        self, gx1: int, gy1: int, gx2: int, gy2: int, weights: np.ndarray
+    ) -> None:
+        if weights[gy1][gx1] < random.random():
             dx = gx2 - gx1
             dy = gy2 - gy1
             if dx == 0:
@@ -131,17 +143,13 @@ class Maze:
                     if 0 <= gx1 + offset < self.grid_w:
                         self.grid[gy1][gx1 + offset] = 0
                         self.grid[gy2][gx2 + offset] = 0
-                        self.grid[(gy1 + gy2) // 2][
-                            (gx1 + gx2) // 2 + offset
-                        ] = 0
+                        self.grid[(gy1 + gy2) // 2][(gx1 + gx2) // 2 + offset] = 0
             elif dy == 0:
                 for offset in [-1, 1]:
                     if 0 <= gy1 + offset < self.grid_h:
                         self.grid[gy1 + offset][gx1] = 0
                         self.grid[gy2 + offset][gx2] = 0
-                        self.grid[(gy1 + gy2) // 2 + offset][
-                            (gx1 + gx2) // 2
-                        ] = 0
+                        self.grid[(gy1 + gy2) // 2 + offset][(gx1 + gx2) // 2] = 0
 
     def draw(self) -> None:
         fig, ax = plt.subplots(figsize=(10, 10))
