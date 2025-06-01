@@ -578,8 +578,11 @@ def learned_heuristic_astar(
 
 
 def integrate():
+    # TODO:  wytrenowac modele na bazie mazeType'ow, ewentualnie tweak
+    # parametrow do gestosci labiryntu
+    maze_type_to_learn = "middle"
     maze = Maze(50, 50)
-    maze.generate()
+    maze.generate(mazeType=maze_type_to_learn)
     maze.weighed_grid = maze.generate_weighed_grid_convolution()
 
     heuristic_learner = HeuristicLearner(maze.grid)
@@ -627,7 +630,7 @@ def integrate():
     heuristic_learner.train(epochs=250)
 
     # zapis modelu
-    heuristic_learner.save_model("learned_heuristic.pth")
+    heuristic_learner.save_model(f"learned_heuristic_{maze_type_to_learn}.pth")
 
     # Test
     path = learned_heuristic_astar(maze, start_pos, goal_pos, heuristic_learner)

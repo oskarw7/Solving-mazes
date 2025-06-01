@@ -63,7 +63,8 @@ def learned_heuristic_astar(
 
 if __name__ == "__main__":
     maze = Maze(200, 200)
-    maze.generate()
+    maze_type = "middle"
+    maze.generate(mazeType=maze_type)
 
     maze.weighed_grid = maze.generate_weighed_grid_convolution()
     start_pos = (1, 1)
