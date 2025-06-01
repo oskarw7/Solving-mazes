@@ -51,15 +51,15 @@ def main():
     np.random.seed(sed)
     res = []
 
-    w = 500
-    h = 500
+    w = 100
+    h = 100
     folder_name = f"{w}x{h}-s{sed}"
     maze = Maze(w, h)
     if os.path.isdir(folder_name):
         print("MAZE LOADED FROM FILE")
         maze.grid = loadMatrix(f"{folder_name}/matrix.pkl")
     else:
-        maze.generate(mazeType="middle")
+        maze.generate(mazeType="dense_column")
     # maze.draw()
 
     start = (0, 1)

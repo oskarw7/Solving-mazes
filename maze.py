@@ -51,11 +51,9 @@ class Maze:
         return walls
 
     def generate(self, mazeType: str = None) -> None:
+
         # Create a matrix with weights symbolizing chance
         # to destroy a wall between two cells
-        # small numbers in the middle, big numbers on the edges
-        # labirynth dense in the middle, sparse on the edges
-
         weights = np.zeros((self.grid_h, self.grid_w))
         if mazeType == "middle":
             for y in range(self.grid_h):
@@ -72,6 +70,13 @@ class Maze:
                     weights[y][x] = chance
             # INFO: clip this value to avoid dead ends in the middle of the maze
             weights = np.clip(weights, 0, 0.90)
+        elif mazeType == "dense_column":
+            for y in range(self.grid_h):
+                for x in range(self.grid_w):
+                    chance = 1 - abs(self.grid_w // 2 - x)/self.grid_w + 0.15
+                    weights[y][x] = chance
+            # INFO: clip this value to avoid dead ends
+            weights = np.clip(weights, 0, 0.95)
 
         print(
             "middle point chance distribution: ",
@@ -100,10 +105,10 @@ class Maze:
                 self.grid[(gy1 + gy2) // 2][(gx1 + gx2) // 2] = 0
 
                 match mazeType:
-                    case "middle":
-                        self.customThinOut(gx1, gy1, gx2, gy2, weights)
-                    case _:
+                    case None:
                         self.randomThinOut(gx1, gy1, gx2, gy2)
+                    case _:
+                        self.customThinOut(gx1, gy1, gx2, gy2, weights)
 
         for x in range(self.grid_w):
             self.grid[0][x] = 1
