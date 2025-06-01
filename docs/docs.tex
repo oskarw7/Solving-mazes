@@ -25,7 +25,7 @@ Politechnika Gdańska, WETI}
 	Celem tego sprawozdania jest porównanie różnych, zaimplementowanych wcześniej metod rozwiązywania labiryntu: depth-first search, A* oraz Q-learning. W analizie skupiono się na takich aspektach jak skuteczność znajdowania rozwiązania, czas działania algorytmu oraz liczba odwiedzonych pól. Dodatkowo oceniono, jak poszczególne metody radzą sobie w labiryntach o różnym rodzaju zagęszczenia.
 
 \section{Generowanie labiryntu}
-	Wygenerowanie labiryntu opiera się na algorytmie opartym na algorytmie Kruskala ze strukturą zbiorów rozłącznych (disjoin set), który zapewnia utworzenie spójnej i acyklicznej siatki przejść – klasycznego labiryntu z jedną możliwą ścieżką pomiędzy dowolnymi dwoma punktami.
+	Wygenerowanie labiryntu opiera się na algorytmie opartym na algorytmie Kruskala ze strukturą zbiorów rozłącznych (disjoint set), który zapewnia utworzenie spójnej i acyklicznej siatki przejść – klasycznego labiryntu z jedną możliwą ścieżką pomiędzy dowolnymi dwoma punktami.
 	\par Najpierw tworzona jest siatka ścian o rozmiarze \texttt{2*szerokość+1} na \texttt{2*wysokość+1}, w której wszystkie komórki są domyślnie oznaczone jako ściany. Następnie generowana jest lista możliwych ścian do usunięcia, tzn. są to wszystkie sąsiadujące komórki w siatce reprezentujące potencjalne przejścia między komórkami. Lista ta jest losowo tasowana, aby zapewnić różnorodność generowanych labiryntów.
 	\par Dla każdej pary sąsiednich komórek sprawdzana jest przynależność do różnych zbiorów. Jeżeli tak – oznacza to, że usunięcie ściany między nimi nie utworzy cyklu. W takim przypadku ściana jest usuwana (komórki połączone są "korytarzem"), a zbiory są scalane.
 	\par Dodatkowo, z prawdopodobieństwem \texttt{X}, usuwane są dodatkowe ściany boczne przylegające do tworzonego przejścia, co wprowadza rozgałęzienia i alternatywne ścieżki. Nadaje to labiryntowi bardziej złożony charakter.
@@ -46,7 +46,7 @@ Politechnika Gdańska, WETI}
 \end{center}
 
 \subsection{Q-learning}
-	TODO: MIKOŁAJ % opis problemow, zalozen, parametrow i wygenerowac sciezke 
+% opis problemow, zalozen, parametrow i wygenerowac sciezke 
     \subsubsection{Parametry}
     Dostępne parametry:
     \begin{itemize}
@@ -55,7 +55,7 @@ Politechnika Gdańska, WETI}
         \item epsilon - szansa na eksplorację (losowa akcja)
         \item episodes - liczba iteracji
     \end{itemize}
-    Dobór parametrów ma duży wpływ na wydajnośc algorytmu.
+    Dobór parametrów ma duży wpływ na wydajność algorytmu.
 
     \subsubsection*{Episodes}
     Liczbę epizodów stosunkowo łatwo wybrać, wystarczy kilka razy włączyć program, żeby zobaczyć jaka jest ich najlepsza liczba w stosunku do czasu wykonania.
@@ -97,11 +97,11 @@ Politechnika Gdańska, WETI}
     W każdej iteracji agent dostaje informację czy jest bliżej (\texttt{reward = 1}), bądź dalej (\texttt{reward = -1}).
     W przypadku dojścia do celu nagroda jest równoważna z długością ścieżki znalezioną przez algorytm A* (założenie, że jest to optymalna ścieżka).
 
-    
+    \newpage
     \subsection{Porównanie}
 	Poniżej pokazane jest porównanie wspomnianych do tej pory algorytmów A*, DFS oraz Q-Learning:
     \begin{center}
-        \includegraphics[width=0.7\textwidth]{images/qlearning-vs-others.png}    
+        \includegraphics[width=0.7\textwidth]{../images/qlearning-vs-others.png}    
     \end{center}
 
     Oraz tabela przedstawiająca ich wydajność:
