@@ -97,6 +97,15 @@ Politechnika Gdańska, WETI}
     W każdej iteracji agent dostaje informację czy jest bliżej (\texttt{reward = 1}), bądź dalej (\texttt{reward = -1}).
     W przypadku dojścia do celu nagroda jest równoważna z długością ścieżki znalezioną przez algorytm A* (założenie, że jest to optymalna ścieżka).
 
+    \subsubsection{Rezultat}
+    
+\begin{center}
+    \includegraphics[width = 0.7\textwidth]{../images/qlearning_path.png}
+\end{center}
+
+    Powyższa grafika pokazuje ścieżkę znalezioną przez wyuczonego agenta. Widać, że ze względu na użycie tej samej heurystyki trasa ta przypomina rozwiązanie algorytmu A*.
+    Trasa biegnie po przekątnej, więc nie ma dużego pola do optymalizacji i nauczony model można uznać za poprawny.
+    
     \newpage
     \subsection{Porównanie}
 	Poniżej pokazane jest porównanie wspomnianych do tej pory algorytmów A*, DFS oraz Q-Learning:
