@@ -1,0 +1,14 @@
+[project]
+name = "solving-mazes"
+version = "0.1.0"
+description = "Artificial Intelligence project about solving mazes."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "debugpy==1.8.14",
+    "matplotlib==3.10.3",
+    "numpy==2.2.5",
+    "ruff>=0.11.12",
+    "scipy>=1.15.3",
+    "torch>=2.7.0",
+]
