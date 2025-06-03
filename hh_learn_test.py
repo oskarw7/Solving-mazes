@@ -56,20 +56,6 @@ class HeuristicFeatureExtractor:
             ]
         )
 
-        # gestosc scian
-        wall_counts = []
-        for radius in [1, 2, 3]:
-            count = 0
-            cells = 0
-            for dy in range(-radius, radius + 1):
-                for dx in range(-radius, radius + 1):
-                    nx, ny = x + dx, y + dy
-                    if 0 <= nx < self.width and 0 <= ny < self.height:
-                        count += self.grid[ny][nx]
-                        cells += 1
-            wall_counts.append(count / cells if cells > 0 else 0)
-        features.extend(wall_counts)
-
         # WEIGHTED GRID FEATURES - Key addition for crowding penalties
         if self.weighed_grid is not None:
             # Current position weight (crowding penalty)
@@ -107,25 +93,25 @@ class HeuristicFeatureExtractor:
             min_weight_estimate = self._estimate_min_weight_path(pos, goal)
             features.append(min_weight_estimate)
 
-        # sprawdzenie czy sciezka jest zablokowana
-        direct_blocked = self._count_walls_in_line(pos, goal)
-        features.append(direct_blocked)
-
-        # wykrywanie korytarzy
-        corridor_score = self._detect_corridor(pos)
-        features.append(corridor_score)
-
-        # wykrywanie slepych uliczek
-        deadend_score = self._detect_nearby_deadends(pos)
-        features.append(deadend_score)
-
-        # alternatywne sciezki
-        alt_paths = self._count_alternative_paths(pos, goal)
-        features.append(alt_paths)
-
-        # sprawdzanie widocznosci celu
-        visibility = self._goal_visibility(pos, goal)
-        features.extend(visibility)
+        # # sprawdzenie czy sciezka jest zablokowana
+        # direct_blocked = self._count_walls_in_line(pos, goal)
+        # features.append(direct_blocked)
+        #
+        # # wykrywanie korytarzy
+        # corridor_score = self._detect_corridor(pos)
+        # features.append(corridor_score)
+        #
+        # # wykrywanie slepych uliczek
+        # deadend_score = self._detect_nearby_deadends(pos)
+        # features.append(deadend_score)
+        #
+        # # alternatywne sciezki
+        # alt_paths = self._count_alternative_paths(pos, goal)
+        # features.append(alt_paths)
+        #
+        # # sprawdzanie widocznosci celu
+        # visibility = self._goal_visibility(pos, goal)
+        # features.extend(visibility)
 
         return np.array(features, dtype=np.float32)
 
@@ -162,7 +148,7 @@ class HeuristicFeatureExtractor:
 
         # Calculate trend: positive = getting more crowded, negative = less crowded
         start_avg = np.mean(weights_along_path[: len(weights_along_path) // 2])
-        end_avg = np.mean(weights_along_path[len(weights_along_path) // 2 :])
+        end_avg = np.mean(weights_along_path[len(weights_along_path) // 2:])
 
         return end_avg - start_avg
 
@@ -457,7 +443,7 @@ class HeuristicLearner:
             batches = 0
 
             for i in range(0, len(indices), batch_size):
-                batch_indices = indices[i : i + batch_size]
+                batch_indices = indices[i: i + batch_size]
 
                 # indeksowanie numpy
                 batch_features = all_features[batch_indices]
@@ -475,7 +461,7 @@ class HeuristicLearner:
                 total_loss += loss.item()
                 batches += 1
 
-            if (epoch + 1) % 100 == 0:
+            if (epoch + 1) % (epochs//5) == 0:
                 avg_loss = total_loss / batches if batches > 0 else 0
                 print(f"Epoch {epoch + 1}/{epochs}, Average Loss: {avg_loss:.4f}")
 
@@ -591,7 +577,8 @@ def integrate():
     start_pos = (1, 1)
     goal_pos = (maze.grid_w - 2, maze.grid_h - 2)
 
-    model = Model(maze.grid, start_pos, goal_pos, episodes=1000, expected_plen=100)
+    model = Model(maze.grid, start_pos, goal_pos, 1000,
+                  100, maze.weighed_grid)
     model.learn()
 
     heuristic_learner.collect_training_data_from_qlearning(model.qtable, goal_pos)
@@ -619,7 +606,8 @@ def integrate():
 
         print(f"Collecting data for start: {(sx, sy)}, goal: {(gx, gy)}")
         temp_model = Model(
-            maze.grid, (sx, sy), (gx, gy), episodes=500, expected_plen=100
+            maze.grid, (sx, sy), (gx, gy), 1000, 100,
+            maze.weighed_grid,
         )
         temp_model.learn()
         heuristic_learner.collect_training_data_from_qlearning(
@@ -627,7 +615,8 @@ def integrate():
         )
         print(f"Collected data for start: {(sx, sy)}, goal: {(gx, gy)}")
 
-    heuristic_learner.train(epochs=250)
+    epochs = 50
+    heuristic_learner.train(epochs=epochs)
 
     # zapis modelu
     heuristic_learner.save_model(f"learned_heuristic_{maze_type_to_learn}.pth")

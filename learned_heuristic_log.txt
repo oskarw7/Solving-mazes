@@ -1,0 +1,34 @@
+Found path with 803 steps using learned heuristic in 42.09 seconds, visited 115584 nodes, total weight: 13109
+Found path with 803 steps using A* in 0.03 seconds, visited 27208 nodes, total weight: 13371
+Found path with 809 steps using learned heuristic in 42.15 seconds, visited 115518 nodes, total weight: 12003
+Found path with 809 steps using A* in 0.07 seconds, visited 54422 nodes, total weight: 12033
+Found path with 799 steps using learned heuristic in 41.68 seconds, visited 113915 nodes, total weight: 12627
+Found path with 799 steps using A* in 0.02 seconds, visited 16805 nodes, total weight: 12467
+Found path with 801 steps using learned heuristic in 41.87 seconds, visited 114159 nodes, total weight: 11968
+Found path with 801 steps using A* in 0.03 seconds, visited 22485 nodes, total weight: 12583
+Found path with 807 steps using learned heuristic in 84.15 seconds, visited 108281 nodes, total weight: 12515
+Found path with 807 steps using A* in 0.33 seconds, visited 42521 nodes, total weight: 12515
+Found path with 797 steps using learned heuristic in 25.59 seconds, visited 113253 nodes, total weight: 11421
+Found path with 797 steps using A* in 0.05 seconds, visited 38115 nodes, total weight: 11769
+Found path with 797 steps using learned heuristic in 25.33 seconds, visited 113472 nodes, total weight: 11182
+Found path with 797 steps using A* in 0.05 seconds, visited 35344 nodes, total weight: 10983
+Found path with 797 steps using learned heuristic in 25.70 seconds, visited 113577 nodes, total weight: 11485
+Found path with 797 steps using A* in 0.07 seconds, visited 51305 nodes, total weight: 11269
+Found path with 797 steps using learned heuristic in 30.89 seconds, visited 131604 nodes, total weight: 5677
+Found path with 797 steps using A* in 0.15 seconds, visited 102742 nodes, total weight: 5734
+Found path with 797 steps using learned heuristic in 30.31 seconds, visited 130944 nodes, total weight: 6546
+Found path with 797 steps using A* in 0.15 seconds, visited 103963 nodes, total weight: 5741
+Found path with 797 steps using learned heuristic in 37.79 seconds, visited 156668 nodes, total weight: 2832
+Found path with 797 steps using A* in 0.23 seconds, visited 155500 nodes, total weight: 3123
+Found path with 797 steps using learned heuristic in 37.57 seconds, visited 156653 nodes, total weight: 3120
+Found path with 797 steps using A* in 0.22 seconds, visited 156634 nodes, total weight: 2913
+Found path with 797 steps using learned heuristic in 37.90 seconds, visited 156705 nodes, total weight: 1149
+Found path with 797 steps using A* in 0.21 seconds, visited 156658 nodes, total weight: 689
+Found path with 797 steps using learned heuristic in 30.88 seconds, visited 131225 nodes, total weight: 6301
+Found path with 797 steps using A* in 0.17 seconds, visited 130156 nodes, total weight: 9376
+Found path with 1997 steps using learned heuristic in 354.47 seconds, visited 820718 nodes, total weight: 12756
+Found path with 1997 steps using A* in 1.23 seconds, visited 817016 nodes, total weight: 21660
+Found path with 797 steps using learned heuristic in 25.29 seconds, visited 112400 nodes, total weight: 10061
+Found path with 797 steps using A* in 0.13 seconds, visited 107924 nodes, total weight: 10978
+Found path with 797 steps using learned heuristic in 25.90 seconds, visited 114634 nodes, total weight: 11309
+Found path with 797 steps using A* in 0.13 seconds, visited 109570 nodes, total weight: 11836

@@ -3,19 +3,21 @@ import time
 import random
 import numpy as np
 import pickle
-from a_star import manhattan_h
-from maze import Maze
-# from hh_learn_test import HeuristicLearner
+
+
+def weighted_h(a: Tuple[int, int], b: Tuple[int, int], weights: List[List[int]]) -> int:
+    return (abs(a[0] - b[0]) + abs(a[1] - b[1])) // 5 + weights[a[1]][a[0]] + weights[b[1]][b[0]]
 
 
 class Model:
     def __init__(
         self,
-        matrix: Maze,
+        matrix: List[List[int]],
         entry: Tuple[int, int],
         goal: Tuple[int, int],
         episodes: int,
         expected_plen: int,
+        weights: List[List[int]]
     ):
         self.matrix = matrix
         self.entry = entry
@@ -24,6 +26,7 @@ class Model:
 
         self.width = len(matrix[0])
         self.height = len(matrix)
+        self.weights = weights
 
         self.qtable = [
             [[0.0 for _ in range(4)] for _ in range(self.width)]
@@ -63,8 +66,6 @@ class Model:
         epsilon = 1
         max_steps = self.width * self.height
 
-        # heuristic_learner = HeuristicLearner(self.matrix)
-
         for ep in range(self.episodes):
             position = self.entry
             steps = 0
@@ -93,8 +94,9 @@ class Model:
                 d_x, d_y = self.directions[move_idx]
                 next_x, next_y = x + d_x, y + d_y
 
-                old_dist = manhattan_h((self.goal[0], self.goal[1]), (x, y))
-                new_dist = manhattan_h((self.goal[0], self.goal[1]), (next_x, next_y))
+                old_dist = weighted_h((self.goal[0], self.goal[1]), (x, y), self.weights)
+                new_dist = weighted_h((self.goal[0], self.goal[1]), (next_x,
+                                                                     next_y), self.weights)
 
                 if (next_x, next_y) == self.goal:
                     r = self.reward

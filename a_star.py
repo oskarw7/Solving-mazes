@@ -4,8 +4,10 @@ from typing import List, Tuple, Optional
 
 
 # Manhattan distance
-def manhattan_h(a: Tuple[int, int], b: Tuple[int, int]) -> int:
-    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+def manhattan_h(a: Tuple[int, int], b: Tuple[int, int]):
+    # return abs(a[0] - b[0]) + abs(a[1] - b[1])
+    # Test with Euclidean distance
+    return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
 
 
 def aStar(

@@ -5,6 +5,20 @@ from typing import List, Tuple, Optional
 import time
 
 
+class LogFile:
+    def __init__(self, filename: str):
+        self.filename = filename
+
+    def log(self, message: str):
+        print(message)
+        with open(self.filename, 'a') as f:
+            f.write(message + '\n')
+
+    def log_attempt(self):
+        with open(self.filename, 'a') as f:
+            f.write("\nAttempting to find a path...\n\n")
+
+
 def learned_heuristic_astar(
     matrix: List[List[int]],
     entry: Tuple[int, int],
@@ -66,19 +80,21 @@ if __name__ == "__main__":
     maze_type = "middle"
     maze.generate(mazeType=maze_type)
 
+    log = LogFile("learned_heuristic_log.txt")
+
     maze.weighed_grid = maze.generate_weighed_grid_convolution()
     start_pos = (1, 1)
     goal_pos = (maze.grid_w - 2, maze.grid_h - 2)
     res = []
 
     heuristic_learner = HeuristicLearner(maze.grid, maze.weighed_grid)
-    heuristic_learner.load_model("learned_heuristic.pth")
+    heuristic_learner.load_model("learned_heuristic_middle.pth")
 
     path, executionTime, nodesVisited, totalWeight = learned_heuristic_astar(
         maze.grid, start_pos, goal_pos, heuristic_learner
     )
     if path:
-        print(
+        log.log(
             f"Found path with {len(path)} steps using learned heuristic in {
                 executionTime:.2f
             } seconds, visited {nodesVisited} nodes, total weight: {totalWeight}"
@@ -89,7 +105,7 @@ if __name__ == "__main__":
         maze.grid, start_pos, goal_pos, maze.weighed_grid
     )
     if path:
-        print(
+        log.log(
             f"Found path with {len(path)} steps using A* in {executionTime:.2f} seconds, visited {nodesVisited} nodes, total weight: {totalWeight}"
         )
     res.append(path)

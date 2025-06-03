@@ -38,7 +38,7 @@ class Maze:
 
             # initialized in __init__ but the grid is not generated yet
             self.weighed_grid_range = weighed_grid_range
-            # self.weighed_grid = self._generate_weighed_grid()
+            self.weighed_grid = self._generate_weighed_grid()
         else:
             self.grid_w = width
             self.grid_h = height
@@ -186,7 +186,13 @@ class Maze:
                     )
                     weights[y][x] = chance
             # INFO: clip this value to avoid dead ends in the middle of the maze
-            weights = np.clip(weights, 0, 0.90)
+            lowest_weight = np.min(weights)
+            weights = weights - lowest_weight
+            weights = weights + 0.60
+            np.clip(weights, 0, 0.85, out=weights)
+            # Zero out the weights to debug
+            # weights = np.zeros_like(weights)
+
         elif mazeType == "dense_column":
             for y in range(self.grid_h):
                 for x in range(self.grid_w):
@@ -205,11 +211,11 @@ class Maze:
 
         # plot the matrix density to check the distribution
 
-        plt.imshow(weights, cmap="hot", interpolation="nearest")
-        plt.colorbar()
-        plt.title("Matrix density")
-        plt.axis("off")
-        plt.show()
+        # plt.imshow(weights, cmap="hot", interpolation="nearest")
+        # plt.colorbar()
+        # plt.title("Matrix density")
+        # plt.axis("off")
+        # plt.show()
 
         ds = DisjointSet(self.width, self.height)
         for (x1, y1), (x2, y2) in self.walls:
@@ -333,7 +339,7 @@ class Maze:
         ax.legend(handles=legend_elements, loc="upper right", frameon=True)
 
         plt.savefig("qlearning-vs-others.png", dpi=300)
-        # plt.show()
+        plt.show()
 
     def saveMatrix(self, filename: str) -> None:
         with open(filename, "wb") as file:
