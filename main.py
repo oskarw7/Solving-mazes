@@ -51,8 +51,8 @@ def main():
     np.random.seed(sed)
     res = []
 
-    w = 100
-    h = 100
+    w = 50
+    h = 50
     folder_name = f"{w}x{h}-s{sed}"
     maze = Maze(w, h)
     if os.path.isdir(folder_name):

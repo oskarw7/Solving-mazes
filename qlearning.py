@@ -7,10 +7,10 @@ import pickle
 
 def weighted_h(a: Tuple[int, int], b: Tuple[int, int], weights: List[List[int]]):
     return (
-        # (abs(a[0] - b[0]) + abs(a[1] - b[1])) // 5 +
+        (abs(a[0] - b[0]) + abs(a[1] - b[1])) // 5 +
         # Euclidean distance
-        np.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) / 2 +
-        (weights[a[1]][a[0]] + weights[b[1]][b[0]]) * 5
+        # np.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) / 2 +
+        (weights[a[1]][a[0]] + weights[b[1]][b[0]])  # * 5
     )
 
 

@@ -7,6 +7,8 @@ import random
 from maze import Maze
 from qlearning import Model
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 
 class HeuristicFeatureExtractor:
     """
@@ -46,6 +48,8 @@ class HeuristicFeatureExtractor:
                 abs(y - gy),  # Manhattan distance Y
                 # Chebyshev distance
                 # max(abs(x - gx), abs(y - gy)),
+                -abs(x - sx),  # distance from start X
+                -abs(y - sy),  # distance from start Y
             ]
         )
 
@@ -547,6 +551,30 @@ def learned_heuristic_astar(
     return None
 
 
+def generate_and_learn_random_point(maze, heuristic_learner):
+    while True:
+        sx, sy = (
+            random.randint(1, maze.grid_w - 2),
+            random.randint(1, maze.grid_h - 2),
+        )
+        if maze.grid[sy][sx] == 0:
+            break
+    while True:
+        gx, gy = (
+            random.randint(1, maze.grid_w - 2),
+            random.randint(1, maze.grid_h - 2),
+        )
+        if maze.grid[gy][gx] == 0:
+            break
+
+    temp_model = Model(
+        maze.grid, (sx, sy), (gx, gy), 1000, 100,
+        maze.weighed_grid,
+    )
+    temp_model.learn()
+    return temp_model.qtable, (gx, gy)
+
+
 def integrate():
     # TODO:  wytrenowac modele na bazie mazeType'ow, ewentualnie tweak
     # parametrow do gestosci labiryntu
@@ -568,36 +596,43 @@ def integrate():
     heuristic_learner.collect_training_data_from_qlearning(model.qtable, goal_pos)
 
     # Metoda 2: Nauka z losowych startów i celów
-    for _ in range(50):
-        while True:
-            sx, sy = (
-                random.randint(1, maze.grid_w - 2),
-                random.randint(1, maze.grid_h - 2),
-            )
-            print("Trying start position:", (sx, sy))
-            if maze.grid[sy][sx] == 0:
-                print("Found valid start position:", (sx, sy))
-                break
-        while True:
-            gx, gy = (
-                random.randint(1, maze.grid_w - 2),
-                random.randint(1, maze.grid_h - 2),
-            )
-            print("Trying goal position:", (gx, gy))
-            if maze.grid[gy][gx] == 0:
-                print("Found valid goal position:", (gx, gy))
-                break
+    # for _ in range(50):
+    #     while True:
+    #         sx, sy = (
+    #             random.randint(1, maze.grid_w - 2),
+    #             random.randint(1, maze.grid_h - 2),
+    #         )
+    #         print("Trying start position:", (sx, sy))
+    #         if maze.grid[sy][sx] == 0:
+    #             print("Found valid start position:", (sx, sy))
+    #             break
+    #     while True:
+    #         gx, gy = (
+    #             random.randint(1, maze.grid_w - 2),
+    #             random.randint(1, maze.grid_h - 2),
+    #         )
+    #         print("Trying goal position:", (gx, gy))
+    #         if maze.grid[gy][gx] == 0:
+    #             print("Found valid goal position:", (gx, gy))
+    #             break
+    #
+    #     print(f"Collecting data for start: {(sx, sy)}, goal: {(gx, gy)}")
+    #     temp_model = Model(
+    #         maze.grid, (sx, sy), (gx, gy), 1000, 100,
+    #         maze.weighed_grid,
+    #     )
+    #     temp_model.learn()
+    #     heuristic_learner.collect_training_data_from_qlearning(
+    #         temp_model.qtable, (gx, gy)
+    #     )
+    #     print(f"Collected data for start: {(sx, sy)}, goal: {(gx, gy)}")
 
-        print(f"Collecting data for start: {(sx, sy)}, goal: {(gx, gy)}")
-        temp_model = Model(
-            maze.grid, (sx, sy), (gx, gy), 1000, 100,
-            maze.weighed_grid,
-        )
-        temp_model.learn()
-        heuristic_learner.collect_training_data_from_qlearning(
-            temp_model.qtable, (gx, gy)
-        )
-        print(f"Collected data for start: {(sx, sy)}, goal: {(gx, gy)}")
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        futures = [executor.submit(generate_and_learn_random_point, maze, heuristic_learner) for _ in range(50)]
+
+    for future in as_completed(futures):
+        qtable, goal = future.result()
+        heuristic_learner.collect_training_data_from_qlearning(qtable, goal)
 
     epochs = 100
     heuristic_learner.train(epochs=epochs)
