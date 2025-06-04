@@ -11,11 +11,11 @@ class LogFile:
 
     def log(self, message: str):
         print(message)
-        with open(self.filename, 'a') as f:
-            f.write(message + '\n')
+        with open(self.filename, "a") as f:
+            f.write(message + "\n")
 
     def log_attempt(self):
-        with open(self.filename, 'a') as f:
+        with open(self.filename, "a") as f:
             f.write("\nAttempting to find a path...\n\n")
 
 
@@ -75,8 +75,36 @@ def learned_heuristic_astar(
     return None, time.time() - startTime, nodesVisited
 
 
+def drawBoth(
+    maze: Maze,
+    path1: List[Tuple[int, int]],
+    path2: List[Tuple[int, int]],
+) -> None:
+    gridWithPath = [row[:] for row in maze.grid]
+
+    path_color_values = [2, 3]
+
+    for path, val in zip([path1, path2], path_color_values):
+        for x, y in path:
+            if 0 <= x < maze.grid_w and 0 <= y < maze.grid_h:
+                gridWithPath[y][x] = val
+
+    from colors import ListedColormap, BoundaryNorm
+    import matplotlib.pyplot as plt
+
+    colorMap = ListedColormap(["white", "black", "magenta"])
+    bounds = [0, 1, 2, 3]
+    norm = BoundaryNorm(bounds, colorMap.N)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.set_title("Learned Heuristic vs A* Pathfinding")
+    ax.imshow(gridWithPath, cmap=colorMap, norm=norm)
+    ax.axic("off")
+    plt.savefig("learned_vs_astar.png", dpi=300)
+    plt.show()
+
+
 if __name__ == "__main__":
-    maze = Maze(500, 500)
+    maze = Maze(200, 200)
     maze_type = "middle"
     maze.generate(mazeType=maze_type)
 
@@ -88,7 +116,7 @@ if __name__ == "__main__":
     res = []
 
     heuristic_learner = HeuristicLearner(maze.grid, maze.weighed_grid)
-    heuristic_learner.load_model("learned_heuristic_middle.pth")
+    heuristic_learner.load_model("learned_heuristic.pth")
 
     path, executionTime, nodesVisited, totalWeight = learned_heuristic_astar(
         maze.grid, start_pos, goal_pos, heuristic_learner
