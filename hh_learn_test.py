@@ -24,12 +24,16 @@ class HeuristicFeatureExtractor:
             self.weighed_grid = np.ones_like(self.grid, dtype=np.int8)
 
     def extract_features(
-        self, pos: Tuple[int, int], goal: Tuple[int, int]
+            self,
+            pos: Tuple[int, int],
+            goal: Tuple[int, int],
+            start: Tuple[int, int]
     ) -> np.ndarray:
         """
         Extract features for heuristic learning
         Returns feature vector of size ~20-30
         """
+        sx, sy = start
         x, y = pos
         gx, gy = goal
 
@@ -92,26 +96,6 @@ class HeuristicFeatureExtractor:
             # Minimum weight path estimate (rough estimate of best possible route)
             min_weight_estimate = self._estimate_min_weight_path(pos, goal)
             features.append(min_weight_estimate)
-
-        # # sprawdzenie czy sciezka jest zablokowana
-        # direct_blocked = self._count_walls_in_line(pos, goal)
-        # features.append(direct_blocked)
-        #
-        # # wykrywanie korytarzy
-        # corridor_score = self._detect_corridor(pos)
-        # features.append(corridor_score)
-        #
-        # # wykrywanie slepych uliczek
-        # deadend_score = self._detect_nearby_deadends(pos)
-        # features.append(deadend_score)
-        #
-        # # alternatywne sciezki
-        # alt_paths = self._count_alternative_paths(pos, goal)
-        # features.append(alt_paths)
-        #
-        # # sprawdzanie widocznosci celu
-        # visibility = self._goal_visibility(pos, goal)
-        # features.extend(visibility)
 
         return np.array(features, dtype=np.float32)
 
@@ -357,7 +341,9 @@ class HeuristicLearner:
         self.feature_extractor = HeuristicFeatureExtractor(maze_grid)
         self.device = device
 
-        sample_features = self.feature_extractor.extract_features((1, 1), (2, 2))
+        sample_features = self.feature_extractor.extract_features(
+            (1, 1), (2, 2), (0, 0)
+        )
         self.feature_size = len(sample_features)
 
         self.heuristic_net = NeuralHeuristic(self.feature_size).to(device)
@@ -387,7 +373,7 @@ class HeuristicLearner:
                         # Use the maze's reward system (negative for higher weights)
                         weight_penalty += self.maze.get_reward((px, py))
 
-            features = self.feature_extractor.extract_features(pos, goal)
+            features = self.feature_extractor.extract_features(pos, goal, start)
             # Combine distance and weight penalty
             target_heuristic = (
                 remaining_steps - weight_penalty
@@ -406,7 +392,8 @@ class HeuristicLearner:
         for y in range(height):
             for x in range(width):
                 if self.maze_grid[y][x] == 0:
-                    features = self.feature_extractor.extract_features((x, y), goal)
+                    features = self.feature_extractor.extract_features((x, y),
+                                                                       goal, (0, 0))
                     # Use max Q-value as heuristic estimate
                     heuristic_value = max(q_table[y][x]) if q_table[y][x] else 0
 
@@ -469,7 +456,7 @@ class HeuristicLearner:
         """
         Predict heuristic value for given position and goal
         """
-        features = self.feature_extractor.extract_features(pos, goal)
+        features = self.feature_extractor.extract_features(pos, goal, (0, 0))
         features_tensor = torch.FloatTensor(features).unsqueeze(0).to(self.device)
 
         with torch.no_grad():
@@ -543,12 +530,9 @@ def learned_heuristic_astar(
                 # Calculate step cost including weight penalty
                 step_cost = 1.0
                 if hasattr(maze, "weighed_grid") and maze.weighed_grid is not None:
-                    try:
-                        # Add weight penalty to step cost
-                        weight_penalty = maze.get_reward(neighbor)
-                        step_cost += weight_penalty
-                    except:
-                        pass
+                    # Add weight penalty to step cost
+                    weight_penalty = maze.get_reward(neighbor)
+                    step_cost += weight_penalty
                 tentative_g = g_score[current] + 1
 
                 if neighbor not in g_score or tentative_g < g_score[neighbor]:
@@ -584,7 +568,7 @@ def integrate():
     heuristic_learner.collect_training_data_from_qlearning(model.qtable, goal_pos)
 
     # Metoda 2: Nauka z losowych startów i celów
-    for _ in range(100):
+    for _ in range(50):
         while True:
             sx, sy = (
                 random.randint(1, maze.grid_w - 2),
@@ -615,7 +599,7 @@ def integrate():
         )
         print(f"Collected data for start: {(sx, sy)}, goal: {(gx, gy)}")
 
-    epochs = 50
+    epochs = 100
     heuristic_learner.train(epochs=epochs)
 
     # zapis modelu

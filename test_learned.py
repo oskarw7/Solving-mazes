@@ -76,7 +76,7 @@ def learned_heuristic_astar(
 
 
 if __name__ == "__main__":
-    maze = Maze(200, 200)
+    maze = Maze(500, 500)
     maze_type = "middle"
     maze.generate(mazeType=maze_type)
 

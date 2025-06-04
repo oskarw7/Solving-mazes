@@ -32,3 +32,9 @@ Found path with 797 steps using learned heuristic in 25.29 seconds, visited 1124
 Found path with 797 steps using A* in 0.13 seconds, visited 107924 nodes, total weight: 10978
 Found path with 797 steps using learned heuristic in 25.90 seconds, visited 114634 nodes, total weight: 11309
 Found path with 797 steps using A* in 0.13 seconds, visited 109570 nodes, total weight: 11836
+Found path with 397 steps using learned heuristic in 9.13 seconds, visited 28253 nodes, total weight: 6166
+Found path with 397 steps using A* in 0.08 seconds, visited 26536 nodes, total weight: 5851
+Found path with 797 steps using learned heuristic in 83.99 seconds, visited 114189 nodes, total weight: 11285
+Found path with 797 steps using A* in 0.59 seconds, visited 108520 nodes, total weight: 12223
+Found path with 1997 steps using learned heuristic in 430.03 seconds, visited 717142 nodes, total weight: 27606
+Found path with 1997 steps using A* in 1.13 seconds, visited 693874 nodes, total weight: 29552

@@ -1,6 +1,6 @@
 import random
 import time
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Optional
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, BoundaryNorm
 from matplotlib.patches import Patch
