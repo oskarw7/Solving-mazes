@@ -1,7 +1,7 @@
-from maze import Maze, loadMatrix
-from dfs import dfsIterative
-from a_star import aStar
-from qlearning import Model
+from utils.maze import Maze, loadMatrix
+from algorithms.dfs import dfsIterative
+from algorithms.a_star import aStar
+from algorithms.qlearning import Model
 import os
 import random
 import numpy as np

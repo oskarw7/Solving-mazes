@@ -1,6 +1,6 @@
 test:
 	@echo "Testing model..."
-	@python3 test_learned.py
+	@python3 models/test_learned.py
 
 run: check
 	@echo "Running the main script..."
@@ -8,11 +8,11 @@ run: check
 
 train:
 	@echo "Training the model..."
-	@python3 hh_learn_test.py
+	@python3 models/heuristic_model.py
 
 maze:
 	@echo "Testing maze generation..."
-	@python3 maze.py
+	@python3 utils/maze.py
 
 
 check:

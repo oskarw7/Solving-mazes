@@ -1,6 +1,6 @@
-from maze import Maze
-from hh_learn_test import HeuristicLearner
-from a_star import aStar
+from utils.maze import Maze
+from heuristic_model import HeuristicLearner
+from algorithms.a_star import aStar
 from typing import List, Tuple, Optional
 import time
 
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         maze_type = "middle"
         maze.generate(mazeType=maze_type)
 
-        log = LogFile("sprawozdanie_testing.txt")
+        log = LogFile("../logs/sprawozdanie_testing.txt")
 
         maze.weighed_grid = maze.generate_weighed_grid_convolution()
         start_pos = (1, 1)

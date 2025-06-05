@@ -4,8 +4,8 @@ import torch.nn as nn
 import torch.optim as optim
 from typing import List, Tuple
 import random
-from maze import Maze
-from qlearning import Model
+from utils.maze import Maze
+from algorithms.qlearning import Model
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
