@@ -26,10 +26,7 @@ class HeuristicFeatureExtractor:
             self.weighed_grid = np.ones_like(self.grid, dtype=np.int8)
 
     def extract_features(
-            self,
-            pos: Tuple[int, int],
-            goal: Tuple[int, int],
-            start: Tuple[int, int]
+        self, pos: Tuple[int, int], goal: Tuple[int, int], start: Tuple[int, int]
     ) -> np.ndarray:
         """
         Extract features for heuristic learning
@@ -48,8 +45,8 @@ class HeuristicFeatureExtractor:
                 abs(y - gy),  # Manhattan distance Y
                 # Chebyshev distance
                 # max(abs(x - gx), abs(y - gy)),
-                -abs(x - sx),  # distance from start X
-                -abs(y - sy),  # distance from start Y
+                # -abs(x - sx),  # distance from start X
+                # -abs(y - sy),  # distance from start Y
             ]
         )
 
@@ -136,7 +133,7 @@ class HeuristicFeatureExtractor:
 
         # Calculate trend: positive = getting more crowded, negative = less crowded
         start_avg = np.mean(weights_along_path[: len(weights_along_path) // 2])
-        end_avg = np.mean(weights_along_path[len(weights_along_path) // 2:])
+        end_avg = np.mean(weights_along_path[len(weights_along_path) // 2 :])
 
         return end_avg - start_avg
 
@@ -338,7 +335,7 @@ class HeuristicLearner:
         self,
         maze_grid: List[List[int]],
         weighed_grid: List[List[int]] = None,
-        device="cpu",
+        device="cuda",
     ):
         self.maze_grid = maze_grid
         self.weighed_grid = weighed_grid
@@ -396,8 +393,9 @@ class HeuristicLearner:
         for y in range(height):
             for x in range(width):
                 if self.maze_grid[y][x] == 0:
-                    features = self.feature_extractor.extract_features((x, y),
-                                                                       goal, (0, 0))
+                    features = self.feature_extractor.extract_features(
+                        (x, y), goal, (0, 0)
+                    )
                     # Use max Q-value as heuristic estimate
                     heuristic_value = max(q_table[y][x]) if q_table[y][x] else 0
 
@@ -434,7 +432,7 @@ class HeuristicLearner:
             batches = 0
 
             for i in range(0, len(indices), batch_size):
-                batch_indices = indices[i: i + batch_size]
+                batch_indices = indices[i : i + batch_size]
 
                 # indeksowanie numpy
                 batch_features = all_features[batch_indices]
@@ -452,7 +450,7 @@ class HeuristicLearner:
                 total_loss += loss.item()
                 batches += 1
 
-            if (epoch + 1) % (epochs//5) == 0:
+            if (epoch + 1) % (epochs // 5) == 0:
                 avg_loss = total_loss / batches if batches > 0 else 0
                 print(f"Epoch {epoch + 1}/{epochs}, Average Loss: {avg_loss:.4f}")
 
@@ -568,7 +566,11 @@ def generate_and_learn_random_point(maze, heuristic_learner):
             break
 
     temp_model = Model(
-        maze.grid, (sx, sy), (gx, gy), 1000, 100,
+        maze.grid,
+        (sx, sy),
+        (gx, gy),
+        1000,
+        100,
         maze.weighed_grid,
     )
     temp_model.learn()
@@ -589,8 +591,7 @@ def integrate():
     start_pos = (1, 1)
     goal_pos = (maze.grid_w - 2, maze.grid_h - 2)
 
-    model = Model(maze.grid, start_pos, goal_pos, 1000,
-                  100, maze.weighed_grid)
+    model = Model(maze.grid, start_pos, goal_pos, 1000, 100, maze.weighed_grid)
     model.learn()
 
     heuristic_learner.collect_training_data_from_qlearning(model.qtable, goal_pos)
@@ -628,7 +629,10 @@ def integrate():
     #     print(f"Collected data for start: {(sx, sy)}, goal: {(gx, gy)}")
 
     with ThreadPoolExecutor(max_workers=8) as executor:
-        futures = [executor.submit(generate_and_learn_random_point, maze, heuristic_learner) for _ in range(50)]
+        futures = [
+            executor.submit(generate_and_learn_random_point, maze, heuristic_learner)
+            for _ in range(50)
+        ]
 
     for future in as_completed(futures):
         qtable, goal = future.result()

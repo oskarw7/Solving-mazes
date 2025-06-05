@@ -116,7 +116,7 @@ if __name__ == "__main__":
     res = []
 
     heuristic_learner = HeuristicLearner(maze.grid, maze.weighed_grid)
-    heuristic_learner.load_model("learned_heuristic.pth")
+    heuristic_learner.load_model("learned_heuristic_middle.pth")
 
     path, executionTime, nodesVisited, totalWeight = learned_heuristic_astar(
         maze.grid, start_pos, goal_pos, heuristic_learner

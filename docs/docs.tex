@@ -129,12 +129,83 @@ Q-Learning & 433  & 0.0013  & 432    \\
 
     Trening modelu zajął \texttt{22.55} sekundy, a liczba odwiedzonych węzłów przez cały proces to \texttt{109,992,906}.
 
+    \pagebreak
 \section{Nauczanie heurystyki}
 
+\subsection{Cechy}
 
-% ------DALSZE TODO------
-% Sekcja dla hiperheurystyki i zageszczonych labiryntow (chyba w jednej sekcji)
-% Podsumowanie
-% Bibliografia (jesli bedziemy chcieli)
+  Na potrzeby stworzenia wyzwania, w którym nauczona heurystyka mogłaby się
+  wykazać, zdecydowaliśmy się na stworzenie labiryntu o zwiększonym zagęszczeniu
+  ścian w pobliżu środka i nadanie poszczególnym polom wag równym liczbie
+  otaczających je ścian.
+
+  Przy nauczaniu heurystyki model zwracał uwagę na następujące cechy:
+  \begin{itemize}
+    \item Odległość do celu (Manhattan distance) 
+    \item Kierunek ruchu
+    \item Wagi pól otaczających
+  \end{itemize}
+
+\subsection{Nauka}
+
+  \subsubsection{Dane treningowe}
+  Za dane treningowe posłużyły nam qtable z algorytmu Q-learning.
+  Pierwsze przejście algorytmu zostało wykonane klasycznie - start znajdował się
+  w lewym górnym rogu, a cel w prawym dolnym. Jednakże, następne przejścia były
+  przeprowadzane z losowo wybranym startem i celem, co pozwoliło na 
+  urozmaicenie danych treningowych.
+
+  % Potencjalnie dla zwiekszenia różnorodności danych treningowych można by
+  % trenować heurystykę np. na lustrzanym odbitym czy też na obróconym labiryncie.
+
+  \subsubsection{Model}
+  Wartstwy ukryte w modelu posiadały funkcję aktywacji ReLU z dropoutem, co
+  pozwoliło na lepsze uogólnienie modelu i uniknięcie przeuczenia.
+  Warstwa wyjściowa posiadała funkcję aktywacji liniową, aby wyciągnąć jedynie
+  wartość heurystyki.
+
+  \subsubsection{Trening}
+  Model był trenowany przez 100 epok, z batch size równym 32.
+  Nawet po zrównolegleniu rozwiązywania losowo zadanych startów i celów
+  czas treningu dla labiryntu o rozmiarze 100x100 wynosił około 2.5 godziny.
+  Odpowiednim i wystarczającym rozwiązaniem okazało się trenowanie modelu
+  na mniejszych labiryntach, a następnie testowanie go na większych.
+
+  
+  \subsection{Wyniki}
+
+  Po wytrenowaniu modelu przetestowaliśmy go używając heurystyki modelu zamiast
+  używanej wcześniej heurystyki Manhattan w algorytmie A*, na labiryntach
+  większych niż te, na których był trenowany. Wyniki porównaliśmy z wynikami algorytmu A*.
+
+  \begin{center}
+    \includegraphics[width=0.7\textwidth]{../nodes_vs_weight_comparison.png}
+  \end{center}
+
+  Jak widać na zamieszczonym wykresie, wytrenowana heurystyka odwiedza więcej
+  węzłów niż A*, ale jest w stanie znaleźć rozwiązanie z mniejszą sumą wag.
+
+  Poniżej znajduje się parę ciekawszych przykładów rozbieżności A* i wytrenowanej heurystyki:
+
+  \begin{center}
+    \includegraphics[width=0.7\textwidth]{../images/interesting_case1.png}
+  \end{center}
+  \begin{center}
+    \includegraphics[width=0.7\textwidth]{../images/interesting_case2.png}
+  \end{center}
+
+  \subsection{Wnioski}
+  Wytrenowana heurystyka znajduje rozwiązania z mniejszą sumą wag niż A*,
+  lecz odwiedza więcej węzłów. Niestety trenowanie modelu jest bardzo niewydajne
+  obliczeniowo, tak jak i wyciąganie z niego heurystyki. Skalowanie wyuczonej
+  heurystyki na większe labirynty jest znacznym plusem dla tego rozwiązania,
+  lecz wyuczenie modelu jest czasochłonne i musiałoby być przeprowadzane dla
+  każdego rozłożenia gęstości ścian w labiryncie osobno.
+
+  \section{Narzędzia pomocnicze}
+  Projekt nie byłby możliwy bez użycia kilku narzędzi, które znacznie
+  ułatwiły pracę. Do generowania labiryntów użyliśmy algorytmu Kruskala,
+  natomiast do generowania tablicy wag użyliśmy konwolucji z jądrem
+  zaimplementowanej w bibliotece Scipy.
 
 \end{document}
