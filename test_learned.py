@@ -79,6 +79,7 @@ def drawBoth(
     maze: Maze,
     path1: List[Tuple[int, int]],
     path2: List[Tuple[int, int]],
+    filename: str,
 ) -> None:
     gridWithPath = [row[:] for row in maze.grid]
 
@@ -89,53 +90,59 @@ def drawBoth(
             if 0 <= x < maze.grid_w and 0 <= y < maze.grid_h:
                 gridWithPath[y][x] = val
 
-    from colors import ListedColormap, BoundaryNorm
+    from matplotlib.colors import ListedColormap, BoundaryNorm
     import matplotlib.pyplot as plt
+    from matplotlib.patches import Patch
 
-    colorMap = ListedColormap(["white", "black", "magenta"])
-    bounds = [0, 1, 2, 3]
+    colorMap = ListedColormap(["white", "black", "magenta", "red"])
+    bounds = [0, 1, 2, 3, 4]
+    legend_elements = [
+        Patch(facecolor="magenta", edgecolor="black", label="Learned"),
+        Patch(facecolor="red", edgecolor="black", label="A*"),
+    ]
     norm = BoundaryNorm(bounds, colorMap.N)
     fig, ax = plt.subplots(figsize=(10, 10))
     ax.set_title("Learned Heuristic vs A* Pathfinding")
     ax.imshow(gridWithPath, cmap=colorMap, norm=norm)
-    ax.axic("off")
-    plt.savefig("learned_vs_astar.png", dpi=300)
-    plt.show()
+    ax.axis("off")
+    ax.legend(handles=legend_elements, loc="upper right")
+    plt.savefig(filename, dpi=300)
+    plt.close()
+    # plt.show()
 
 
 if __name__ == "__main__":
-    maze = Maze(200, 200)
-    maze_type = "middle"
-    maze.generate(mazeType=maze_type)
+    for iter in range(16):
+        maze = Maze(200, 200)
+        maze_type = "middle"
+        maze.generate(mazeType=maze_type)
 
-    log = LogFile("learned_heuristic_log.txt")
+        log = LogFile("sprawozdanie_testing.txt")
 
-    maze.weighed_grid = maze.generate_weighed_grid_convolution()
-    start_pos = (1, 1)
-    goal_pos = (maze.grid_w - 2, maze.grid_h - 2)
-    res = []
+        maze.weighed_grid = maze.generate_weighed_grid_convolution()
+        start_pos = (1, 1)
+        goal_pos = (maze.grid_w - 2, maze.grid_h - 2)
+        res = []
 
-    heuristic_learner = HeuristicLearner(maze.grid, maze.weighed_grid)
-    heuristic_learner.load_model("learned_heuristic_middle.pth")
+        heuristic_learner = HeuristicLearner(maze.grid, maze.weighed_grid)
+        heuristic_learner.load_model("learned_heuristic_middle.pth")
 
-    path, executionTime, nodesVisited, totalWeight = learned_heuristic_astar(
-        maze.grid, start_pos, goal_pos, heuristic_learner
-    )
-    if path:
-        log.log(
-            f"Found path with {len(path)} steps using learned heuristic in {
-                executionTime:.2f
-            } seconds, visited {nodesVisited} nodes, total weight: {totalWeight}"
+        path, executionTime, nodesVisited, totalWeight = learned_heuristic_astar(
+            maze.grid, start_pos, goal_pos, heuristic_learner
         )
+        if path:
+            log.log(
+                    f"learned: {len(path)} {executionTime:.2f} {nodesVisited} {totalWeight}"
+            )
+            res.append(path)
+
+        path, executionTime, nodesVisited, totalWeight = aStar(
+            maze.grid, start_pos, goal_pos, maze.weighed_grid
+        )
+        if path:
+            log.log(
+                    f"a_star: {len(path)} {executionTime:.2f} {nodesVisited} {totalWeight}"
+            )
         res.append(path)
 
-    path, executionTime, nodesVisited, totalWeight = aStar(
-        maze.grid, start_pos, goal_pos, maze.weighed_grid
-    )
-    if path:
-        log.log(
-            f"Found path with {len(path)} steps using A* in {executionTime:.2f} seconds, visited {nodesVisited} nodes, total weight: {totalWeight}"
-        )
-    res.append(path)
-
-    maze.drawAll(res)
+        drawBoth(maze, res[0], res[1], f"./images/astar_vs_learned_{iter}.png")
