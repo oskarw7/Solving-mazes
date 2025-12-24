@@ -1,6 +1,6 @@
 # Maze Solving Methods
 
-A comprehensive comparison and implementation of different maze solving algorithms including Depth-First Search (DFS), A*, and Q-Learning with neural network-based heuristic learning.
+A comprehensive comparison and implementation of different maze-solving algorithms including Depth-First Search (DFS), A*, and Q-Learning with neural network-based heuristic learning.
 
 ![Algorithms comparison](images/readme.png)
 
